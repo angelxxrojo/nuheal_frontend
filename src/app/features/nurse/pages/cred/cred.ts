@@ -22,13 +22,13 @@ import { debounceTime, Subject } from 'rxjs';
           <p class="mt-1 text-sm text-gray-500">Control de Crecimiento y Desarrollo</p>
         </div>
         <div class="flex gap-2">
-          <button (click)="openCalculatorModal()" class="btn btn-secondary">
+          <button (click)="openCalculatorModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
             </svg>
             Calculadora OMS
           </button>
-          <button (click)="openControlModal()" class="btn btn-primary">
+          <button (click)="openControlModal()" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -39,7 +39,7 @@ import { debounceTime, Subject } from 'rxjs';
 
       <!-- Alertas -->
       @if (alertas().length > 0) {
-        <div class="card card-body bg-red-50 border-red-200">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-5 bg-red-50 border-red-200">
           <div class="flex items-center gap-3 mb-3">
             <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
@@ -60,7 +60,7 @@ import { debounceTime, Subject } from 'rxjs';
                     </p>
                   </div>
                 </div>
-                <button (click)="viewControlDetail(alerta)" class="btn btn-ghost btn-sm">
+                <button (click)="viewControlDetail(alerta)" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
                   Ver
                 </button>
               </div>
@@ -70,7 +70,7 @@ import { debounceTime, Subject } from 'rxjs';
       }
 
       <!-- Filters -->
-      <div class="card card-body">
+      <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
         <div class="flex flex-col sm:flex-row gap-4">
           <div class="flex-1 relative">
             <input
@@ -78,7 +78,7 @@ import { debounceTime, Subject } from 'rxjs';
               [(ngModel)]="pacienteSearch"
               (ngModelChange)="onPacienteSearchForFilter($event)"
               placeholder="Filtrar por paciente..."
-              class="form-input w-full"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 w-full"
             >
             @if (filterPacienteResults().length > 0) {
               <div class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -105,7 +105,7 @@ import { debounceTime, Subject } from 'rxjs';
             </div>
           }
           <div class="flex gap-2">
-            <select [(ngModel)]="filterAlerta" (ngModelChange)="loadControles()" class="form-input">
+            <select [(ngModel)]="filterAlerta" (ngModelChange)="loadControles()" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               <option value="">Todas las alertas</option>
               <option value="true">Con alerta</option>
               <option value="false">Sin alerta</option>
@@ -117,20 +117,20 @@ import { debounceTime, Subject } from 'rxjs';
       <!-- Loading -->
       @if (loading()) {
         <div class="flex justify-center py-12">
-          <div class="spinner spinner-lg"></div>
+          <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
       }
 
       <!-- Controls List -->
       @if (!loading()) {
         @if (controles().length === 0) {
-          <div class="card card-body">
-            <div class="empty-state">
-              <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
+            <div class="text-center py-8">
+              <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
-              <p class="empty-state-title">No hay controles registrados</p>
-              <p class="empty-state-description">Registra el primer control CRED</p>
+              <p class="mt-2 text-sm font-medium text-gray-900">No hay controles registrados</p>
+              <p class="mt-1 text-sm text-gray-500">Registra el primer control CRED</p>
               <button (click)="openControlModal()" class="btn btn-primary mt-4">
                 Nuevo Control
               </button>
@@ -139,11 +139,11 @@ import { debounceTime, Subject } from 'rxjs';
         } @else {
           <div class="space-y-4">
             @for (control of controles(); track control.id) {
-              <div class="card cursor-pointer hover:shadow-md transition-shadow" (click)="viewControlDetail(control)">
-                <div class="card-body">
+              <div class="bg-white rounded-lg shadow border border-gray-200 cursor-pointer hover:shadow-md transition-shadow" (click)="viewControlDetail(control)">
+                <div class="p-5">
                   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div class="flex items-start gap-4">
-                      <div class="avatar avatar-md bg-primary-100 text-primary-700">
+                      <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-medium">
                         {{ getInitials(control.paciente_nombre || '') }}
                       </div>
                       <div>
@@ -176,11 +176,11 @@ import { debounceTime, Subject } from 'rxjs';
                     </div>
                     <div class="flex items-center gap-2">
                       @if (control.diagnostico_peso_talla_display) {
-                        <span class="badge badge-gray">{{ control.diagnostico_peso_talla_display }}</span>
+                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ control.diagnostico_peso_talla_display }}</span>
                       }
                       <button
                         (click)="viewGrowthChart(control); $event.stopPropagation()"
-                        class="btn btn-ghost btn-sm"
+                        class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
                         title="Ver gráfico">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
@@ -203,7 +203,7 @@ import { debounceTime, Subject } from 'rxjs';
                 <button
                   (click)="goToPage(currentPage() - 1)"
                   [disabled]="currentPage() === 1"
-                  class="btn btn-secondary btn-sm">
+                  class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">
                   Anterior
                 </button>
                 <span class="px-3 py-1 text-sm text-gray-700">
@@ -212,7 +212,7 @@ import { debounceTime, Subject } from 'rxjs';
                 <button
                   (click)="goToPage(currentPage() + 1)"
                   [disabled]="currentPage() === totalPages()"
-                  class="btn btn-secondary btn-sm">
+                  class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">
                   Siguiente
                 </button>
               </div>
@@ -234,7 +234,7 @@ import { debounceTime, Subject } from 'rxjs';
           <form [formGroup]="controlForm" (ngSubmit)="saveControl()" class="p-6 space-y-4">
             <!-- Paciente Search -->
             <div>
-              <label class="form-label">Paciente *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Paciente *</label>
               @if (!selectedPaciente()) {
                 <div class="relative">
                   <input
@@ -243,7 +243,7 @@ import { debounceTime, Subject } from 'rxjs';
                     [ngModelOptions]="{standalone: true}"
                     (ngModelChange)="onModalPacienteSearch($event)"
                     placeholder="Buscar paciente..."
-                    class="form-input"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
                   >
                   @if (modalPacienteResults().length > 0) {
                     <div class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -266,7 +266,7 @@ import { debounceTime, Subject } from 'rxjs';
                     <p class="font-medium">{{ selectedPaciente()!.nombre_completo }}</p>
                     <p class="text-sm text-gray-500">{{ selectedPaciente()!.edad_texto }}</p>
                   </div>
-                  <button type="button" (click)="clearModalPaciente()" class="btn btn-ghost btn-sm">
+                  <button type="button" (click)="clearModalPaciente()" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -277,28 +277,28 @@ import { debounceTime, Subject } from 'rxjs';
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="form-label">Fecha *</label>
-                <input type="date" formControlName="fecha" class="form-input" [max]="today">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
+                <input type="date" formControlName="fecha" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" [max]="today">
               </div>
               <div></div>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <label class="form-label">Peso (kg) *</label>
-                <input type="number" formControlName="peso_kg" class="form-input" step="0.01" min="0" (blur)="calculatePreview()">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Peso (kg) *</label>
+                <input type="number" formControlName="peso_kg" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.01" min="0" (blur)="calculatePreview()">
               </div>
               <div>
-                <label class="form-label">Talla (cm) *</label>
-                <input type="number" formControlName="talla_cm" class="form-input" step="0.1" min="0" (blur)="calculatePreview()">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Talla (cm) *</label>
+                <input type="number" formControlName="talla_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1" min="0" (blur)="calculatePreview()">
               </div>
               <div>
-                <label class="form-label">P. Cefálico (cm)</label>
-                <input type="number" formControlName="perimetro_cefalico_cm" class="form-input" step="0.1" min="0">
+                <label class="block text-sm font-medium text-gray-700 mb-1">P. Cefálico (cm)</label>
+                <input type="number" formControlName="perimetro_cefalico_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1" min="0">
               </div>
               <div>
-                <label class="form-label">P. Torácico (cm)</label>
-                <input type="number" formControlName="perimetro_toracico_cm" class="form-input" step="0.1" min="0">
+                <label class="block text-sm font-medium text-gray-700 mb-1">P. Torácico (cm)</label>
+                <input type="number" formControlName="perimetro_toracico_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1" min="0">
               </div>
             </div>
 
@@ -321,7 +321,7 @@ import { debounceTime, Subject } from 'rxjs';
                   </div>
                   <div>
                     <p class="text-gray-500">Diagnóstico</p>
-                    <span [class]="previewResult()!.diagnosticos.tiene_alerta ? 'badge badge-danger' : 'badge badge-success'">
+                    <span [class]="previewResult()!.diagnosticos.tiene_alerta ? 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800' : 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'">
                       {{ previewResult()!.diagnosticos.diagnostico_peso_edad_display }}
                     </span>
                   </div>
@@ -333,53 +333,53 @@ import { debounceTime, Subject } from 'rxjs';
               <h4 class="font-medium text-gray-900 mb-3">Desarrollo (opcional)</h4>
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="form-label">Desarrollo Motor</label>
-                  <textarea formControlName="desarrollo_motor" rows="2" class="form-input"></textarea>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Desarrollo Motor</label>
+                  <textarea formControlName="desarrollo_motor" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
                 </div>
                 <div>
-                  <label class="form-label">Desarrollo Lenguaje</label>
-                  <textarea formControlName="desarrollo_lenguaje" rows="2" class="form-input"></textarea>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Desarrollo Lenguaje</label>
+                  <textarea formControlName="desarrollo_lenguaje" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
                 </div>
                 <div>
-                  <label class="form-label">Desarrollo Social</label>
-                  <textarea formControlName="desarrollo_social" rows="2" class="form-input"></textarea>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Desarrollo Social</label>
+                  <textarea formControlName="desarrollo_social" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
                 </div>
                 <div>
-                  <label class="form-label">Desarrollo Cognitivo</label>
-                  <textarea formControlName="desarrollo_cognitivo" rows="2" class="form-input"></textarea>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Desarrollo Cognitivo</label>
+                  <textarea formControlName="desarrollo_cognitivo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
                 </div>
               </div>
             </div>
 
             <div>
-              <label class="form-label">Observaciones</label>
-              <textarea formControlName="observaciones" rows="2" class="form-input"></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+              <textarea formControlName="observaciones" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
             </div>
 
             <div>
-              <label class="form-label">Recomendaciones</label>
-              <textarea formControlName="recomendaciones" rows="2" class="form-input"></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Recomendaciones</label>
+              <textarea formControlName="recomendaciones" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
             </div>
 
             <div>
-              <label class="form-label">Próxima Cita</label>
-              <input type="date" formControlName="proxima_cita" class="form-input" [min]="today">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Próxima Cita</label>
+              <input type="date" formControlName="proxima_cita" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" [min]="today">
             </div>
 
             @if (controlError()) {
-              <div class="alert alert-danger">{{ controlError() }}</div>
+              <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">{{ controlError() }}</div>
             }
 
             <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <button type="button" (click)="closeControlModal()" class="btn btn-secondary">
+              <button type="button" (click)="closeControlModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Cancelar
               </button>
               <button
                 type="submit"
                 [disabled]="controlForm.invalid || !selectedPaciente() || savingControl()"
-                class="btn btn-primary">
+                class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
                 @if (savingControl()) {
-                  <div class="spinner spinner-sm mr-2"></div>
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 }
                 Guardar Control
               </button>
@@ -395,7 +395,7 @@ import { debounceTime, Subject } from 'rxjs';
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideIn">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900">Detalle del Control</h2>
-            <button (click)="closeDetailModal()" class="btn btn-ghost btn-sm">
+            <button (click)="closeDetailModal()" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -483,7 +483,7 @@ import { debounceTime, Subject } from 'rxjs';
               </div>
 
               @if (selectedControl()!.alertas_activas && selectedControl()!.alertas_activas!.length > 0) {
-                <div class="alert alert-danger">
+                <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">
                   <h4 class="font-medium mb-2">Alertas Activas</h4>
                   <ul class="list-disc list-inside">
                     @for (alerta of selectedControl()!.alertas_activas; track alerta.indicador) {
@@ -508,10 +508,10 @@ import { debounceTime, Subject } from 'rxjs';
               }
 
               <div class="flex gap-3 pt-4 border-t border-gray-200">
-                <button (click)="editControl(selectedControl()!)" class="btn btn-secondary flex-1">
+                <button (click)="editControl(selectedControl()!)" class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                   Editar
                 </button>
-                <button (click)="viewGrowthChart(selectedControl()!)" class="btn btn-primary flex-1">
+                <button (click)="viewGrowthChart(selectedControl()!)" class="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700">
                   Ver Gráfico
                 </button>
               </div>
@@ -529,7 +529,7 @@ import { debounceTime, Subject } from 'rxjs';
             <h2 class="text-lg font-semibold text-gray-900">
               Curvas de Crecimiento - {{ chartData()?.paciente_nombre }}
             </h2>
-            <button (click)="closeChartModal()" class="btn btn-ghost btn-sm">
+            <button (click)="closeChartModal()" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -537,17 +537,17 @@ import { debounceTime, Subject } from 'rxjs';
           </div>
           @if (loadingChart()) {
             <div class="flex justify-center py-12">
-              <div class="spinner spinner-lg"></div>
+              <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           } @else if (chartData()) {
             <div class="p-6">
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Peso/Edad Chart (simplified representation) -->
-                <div class="card">
-                  <div class="card-header">
+                <div class="bg-white rounded-lg shadow border border-gray-200">
+                  <div class="px-5 py-4 border-b border-gray-200">
                     <h3 class="font-semibold">Peso para la Edad</h3>
                   </div>
-                  <div class="card-body">
+                  <div class="p-5">
                     <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
                       <div class="text-center">
                         <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -582,11 +582,11 @@ import { debounceTime, Subject } from 'rxjs';
                 </div>
 
                 <!-- Talla/Edad Chart -->
-                <div class="card">
-                  <div class="card-header">
+                <div class="bg-white rounded-lg shadow border border-gray-200">
+                  <div class="px-5 py-4 border-b border-gray-200">
                     <h3 class="font-semibold">Talla para la Edad</h3>
                   </div>
-                  <div class="card-body">
+                  <div class="p-5">
                     <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
                       <div class="text-center">
                         <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -643,20 +643,20 @@ import { debounceTime, Subject } from 'rxjs';
           <form [formGroup]="calculatorForm" (ngSubmit)="calculate()" class="p-6 space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="form-label">Peso (kg) *</label>
-                <input type="number" formControlName="peso_kg" class="form-input" step="0.01">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Peso (kg) *</label>
+                <input type="number" formControlName="peso_kg" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.01">
               </div>
               <div>
-                <label class="form-label">Talla (cm) *</label>
-                <input type="number" formControlName="talla_cm" class="form-input" step="0.1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Talla (cm) *</label>
+                <input type="number" formControlName="talla_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1">
               </div>
               <div>
-                <label class="form-label">Edad (meses) *</label>
-                <input type="number" formControlName="edad_meses" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Edad (meses) *</label>
+                <input type="number" formControlName="edad_meses" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
               <div>
-                <label class="form-label">Sexo *</label>
-                <select formControlName="sexo" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Sexo *</label>
+                <select formControlName="sexo" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
                 </select>
@@ -668,7 +668,7 @@ import { debounceTime, Subject } from 'rxjs';
               [disabled]="calculatorForm.invalid || calculating()"
               class="btn btn-primary w-full">
               @if (calculating()) {
-                <div class="spinner spinner-sm mr-2"></div>
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
               }
               Calcular
             </button>
@@ -700,7 +700,7 @@ import { debounceTime, Subject } from 'rxjs';
                     </div>
                   </div>
                   <div [class]="'p-4 rounded-lg text-center ' + (calculatorResult()!.diagnosticos.tiene_alerta ? 'bg-red-50' : 'bg-green-50')">
-                    <span [class]="calculatorResult()!.diagnosticos.tiene_alerta ? 'badge badge-danger' : 'badge badge-success'">
+                    <span [class]="calculatorResult()!.diagnosticos.tiene_alerta ? 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800' : 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'">
                       {{ calculatorResult()!.diagnosticos.diagnostico_peso_edad_display }}
                     </span>
                   </div>
@@ -709,7 +709,7 @@ import { debounceTime, Subject } from 'rxjs';
             }
 
             <div class="flex justify-end pt-4 border-t border-gray-200">
-              <button type="button" (click)="closeCalculatorModal()" class="btn btn-secondary">
+              <button type="button" (click)="closeCalculatorModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Cerrar
               </button>
             </div>
@@ -867,9 +867,9 @@ export class CREDComponent implements OnInit {
 
   getAlertBadgeClass(tipo: TipoAlerta): string {
     const classes: Record<TipoAlerta, string> = {
-      verde: 'badge badge-success',
-      amarillo: 'badge badge-warning',
-      rojo: 'badge badge-danger'
+      verde: 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800',
+      amarillo: 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800',
+      rojo: 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800'
     };
     return classes[tipo];
   }

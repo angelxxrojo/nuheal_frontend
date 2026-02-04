@@ -21,7 +21,7 @@ import { debounceTime, Subject } from 'rxjs';
         </div>
         <button
           (click)="openCreateModal()"
-          class="btn btn-primary">
+          class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition-colors">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
@@ -32,19 +32,19 @@ import { debounceTime, Subject } from 'rxjs';
       <!-- Stats Cards -->
       @if (stats()) {
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="card card-body">
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
             <p class="text-sm text-gray-500">Total Pacientes</p>
             <p class="text-2xl font-semibold text-gray-900">{{ stats()!.total }}</p>
           </div>
-          <div class="card card-body">
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
             <p class="text-sm text-gray-500">Masculinos</p>
             <p class="text-2xl font-semibold text-blue-600">{{ stats()!.by_sex.masculino }}</p>
           </div>
-          <div class="card card-body">
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
             <p class="text-sm text-gray-500">Femeninos</p>
             <p class="text-2xl font-semibold text-pink-600">{{ stats()!.by_sex.femenino }}</p>
           </div>
-          <div class="card card-body">
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
             <p class="text-sm text-gray-500">Menores de 5 años</p>
             <p class="text-2xl font-semibold text-primary-600">{{ stats()!.by_age['0-5'] || 0 }}</p>
           </div>
@@ -52,7 +52,7 @@ import { debounceTime, Subject } from 'rxjs';
       }
 
       <!-- Search and Filters -->
-      <div class="card card-body">
+      <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
         <div class="flex flex-col sm:flex-row gap-4">
           <div class="flex-1">
             <input
@@ -60,13 +60,13 @@ import { debounceTime, Subject } from 'rxjs';
               placeholder="Buscar por nombre o documento..."
               [(ngModel)]="searchTerm"
               (ngModelChange)="onSearchChange($event)"
-              class="form-input w-full">
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
           </div>
           <div class="flex gap-2">
             <select
               [(ngModel)]="filterSexo"
               (ngModelChange)="loadPacientes()"
-              class="form-input">
+              class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               <option value="">Todos los sexos</option>
               <option value="M">Masculino</option>
               <option value="F">Femenino</option>
@@ -78,13 +78,13 @@ import { debounceTime, Subject } from 'rxjs';
       <!-- Loading State -->
       @if (loading()) {
         <div class="flex justify-center py-12">
-          <div class="spinner spinner-lg"></div>
+          <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
       }
 
       <!-- Error State -->
       @if (error()) {
-        <div class="alert alert-danger">
+        <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">
           {{ error() }}
           <button (click)="loadPacientes()" class="ml-2 underline">Reintentar</button>
         </div>
@@ -93,38 +93,38 @@ import { debounceTime, Subject } from 'rxjs';
       <!-- Pacientes Table -->
       @if (!loading() && !error()) {
         @if (pacientes().length === 0) {
-          <div class="card card-body">
-            <div class="empty-state">
-              <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="text-center py-8">
+              <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
-              <p class="empty-state-title">No hay pacientes</p>
-              <p class="empty-state-description">Comienza agregando tu primer paciente</p>
-              <button (click)="openCreateModal()" class="btn btn-primary mt-4">
+              <p class="mt-2 text-sm font-medium text-gray-900">No hay pacientes</p>
+              <p class="mt-1 text-sm text-gray-500">Comienza agregando tu primer paciente</p>
+              <button (click)="openCreateModal()" class="mt-4 inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition-colors">
                 Agregar Paciente
               </button>
             </div>
           </div>
         } @else {
-          <div class="table-container">
-            <table class="table">
-              <thead>
+          <div class="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
                 <tr>
-                  <th>Paciente</th>
-                  <th>Documento</th>
-                  <th>Edad</th>
-                  <th>Sexo</th>
-                  <th>Teléfono</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Edad</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sexo</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody class="bg-white divide-y divide-gray-200">
                 @for (paciente of pacientes(); track paciente.id) {
-                  <tr>
-                    <td>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center">
-                        <div class="avatar avatar-md bg-primary-100 text-primary-700 mr-3">
+                        <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-medium mr-3">
                           {{ getInitials(paciente) }}
                         </div>
                         <div>
@@ -133,27 +133,27 @@ import { debounceTime, Subject } from 'rxjs';
                         </div>
                       </div>
                     </td>
-                    <td>
-                      <span class="badge badge-gray">{{ paciente.tipo_documento_display || paciente.tipo_documento | uppercase }}</span>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ paciente.tipo_documento_display || paciente.tipo_documento | uppercase }}</span>
                       {{ paciente.numero_documento }}
                     </td>
-                    <td>{{ paciente.edad_texto }}</td>
-                    <td>
-                      <span [class]="paciente.sexo === 'M' ? 'badge badge-info' : 'badge badge-primary'">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ paciente.edad_texto }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span [class]="paciente.sexo === 'M' ? 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800' : 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800'">
                         {{ paciente.sexo_display || (paciente.sexo === 'M' ? 'Masculino' : 'Femenino') }}
                       </span>
                     </td>
-                    <td>{{ paciente.telefono || '-' }}</td>
-                    <td>
-                      <span [class]="paciente.is_active ? 'badge badge-success' : 'badge badge-danger'">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ paciente.telefono || '-' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span [class]="paciente.is_active ? 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800' : 'inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800'">
                         {{ paciente.is_active ? 'Activo' : 'Inactivo' }}
                       </span>
                     </td>
-                    <td>
+                    <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center gap-2">
                         <a
                           [routerLink]="['/nurse/pacientes', paciente.id]"
-                          class="btn btn-ghost btn-sm"
+                          class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
                           title="Ver detalle">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -162,7 +162,7 @@ import { debounceTime, Subject } from 'rxjs';
                         </a>
                         <button
                           (click)="openEditModal(paciente)"
-                          class="btn btn-ghost btn-sm"
+                          class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
                           title="Editar">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -170,7 +170,7 @@ import { debounceTime, Subject } from 'rxjs';
                         </button>
                         <button
                           (click)="confirmDelete(paciente)"
-                          class="btn btn-ghost btn-sm text-red-600 hover:text-red-700"
+                          class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
                           title="Eliminar">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -194,7 +194,7 @@ import { debounceTime, Subject } from 'rxjs';
                 <button
                   (click)="goToPage(currentPage() - 1)"
                   [disabled]="currentPage() === 1"
-                  class="btn btn-secondary btn-sm">
+                  class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                   Anterior
                 </button>
                 <span class="px-3 py-1 text-sm text-gray-700">
@@ -203,7 +203,7 @@ import { debounceTime, Subject } from 'rxjs';
                 <button
                   (click)="goToPage(currentPage() + 1)"
                   [disabled]="currentPage() === totalPages()"
-                  class="btn btn-secondary btn-sm">
+                  class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                   Siguiente
                 </button>
               </div>
@@ -226,8 +226,8 @@ import { debounceTime, Subject } from 'rxjs';
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- Tipo Documento -->
               <div>
-                <label class="form-label">Tipo de Documento *</label>
-                <select formControlName="tipo_documento" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Documento *</label>
+                <select formControlName="tipo_documento" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                   <option value="dni">DNI</option>
                   <option value="ce">Carné de Extranjería</option>
                   <option value="pasaporte">Pasaporte</option>
@@ -237,50 +237,50 @@ import { debounceTime, Subject } from 'rxjs';
 
               <!-- Número Documento -->
               <div>
-                <label class="form-label">Número de Documento *</label>
-                <input type="text" formControlName="numero_documento" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Número de Documento *</label>
+                <input type="text" formControlName="numero_documento" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                 @if (pacienteForm.get('numero_documento')?.touched && pacienteForm.get('numero_documento')?.errors) {
-                  <p class="form-error">El número de documento es requerido</p>
+                  <p class="mt-1 text-sm text-red-600">El número de documento es requerido</p>
                 }
               </div>
 
               <!-- Nombres -->
               <div>
-                <label class="form-label">Nombres *</label>
-                <input type="text" formControlName="nombres" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nombres *</label>
+                <input type="text" formControlName="nombres" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                 @if (pacienteForm.get('nombres')?.touched && pacienteForm.get('nombres')?.errors) {
-                  <p class="form-error">Los nombres son requeridos</p>
+                  <p class="mt-1 text-sm text-red-600">Los nombres son requeridos</p>
                 }
               </div>
 
               <!-- Apellido Paterno -->
               <div>
-                <label class="form-label">Apellido Paterno *</label>
-                <input type="text" formControlName="apellido_paterno" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Apellido Paterno *</label>
+                <input type="text" formControlName="apellido_paterno" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                 @if (pacienteForm.get('apellido_paterno')?.touched && pacienteForm.get('apellido_paterno')?.errors) {
-                  <p class="form-error">El apellido paterno es requerido</p>
+                  <p class="mt-1 text-sm text-red-600">El apellido paterno es requerido</p>
                 }
               </div>
 
               <!-- Apellido Materno -->
               <div>
-                <label class="form-label">Apellido Materno</label>
-                <input type="text" formControlName="apellido_materno" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Apellido Materno</label>
+                <input type="text" formControlName="apellido_materno" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
 
               <!-- Fecha Nacimiento -->
               <div>
-                <label class="form-label">Fecha de Nacimiento *</label>
-                <input type="date" formControlName="fecha_nacimiento" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento *</label>
+                <input type="date" formControlName="fecha_nacimiento" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                 @if (pacienteForm.get('fecha_nacimiento')?.touched && pacienteForm.get('fecha_nacimiento')?.errors) {
-                  <p class="form-error">La fecha de nacimiento es requerida</p>
+                  <p class="mt-1 text-sm text-red-600">La fecha de nacimiento es requerida</p>
                 }
               </div>
 
               <!-- Sexo -->
               <div>
-                <label class="form-label">Sexo *</label>
-                <select formControlName="sexo" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Sexo *</label>
+                <select formControlName="sexo" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
                 </select>
@@ -288,67 +288,67 @@ import { debounceTime, Subject } from 'rxjs';
 
               <!-- Lugar de Nacimiento -->
               <div>
-                <label class="form-label">Lugar de Nacimiento</label>
-                <input type="text" formControlName="lugar_nacimiento" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Lugar de Nacimiento</label>
+                <input type="text" formControlName="lugar_nacimiento" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
 
               <!-- Teléfono -->
               <div>
-                <label class="form-label">Teléfono</label>
-                <input type="tel" formControlName="telefono" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                <input type="tel" formControlName="telefono" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
 
               <!-- Email -->
               <div>
-                <label class="form-label">Email</label>
-                <input type="email" formControlName="email" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" formControlName="email" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
 
               <!-- Dirección -->
               <div class="md:col-span-2">
-                <label class="form-label">Dirección</label>
-                <input type="text" formControlName="direccion" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                <input type="text" formControlName="direccion" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
 
               <!-- Distrito -->
               <div>
-                <label class="form-label">Distrito</label>
-                <input type="text" formControlName="distrito" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Distrito</label>
+                <input type="text" formControlName="distrito" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
 
               <!-- Provincia -->
               <div>
-                <label class="form-label">Provincia</label>
-                <input type="text" formControlName="provincia" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Provincia</label>
+                <input type="text" formControlName="provincia" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
 
               <!-- Departamento -->
               <div>
-                <label class="form-label">Departamento</label>
-                <input type="text" formControlName="departamento" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+                <input type="text" formControlName="departamento" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
 
               <!-- Observaciones -->
               <div class="md:col-span-2">
-                <label class="form-label">Observaciones</label>
-                <textarea formControlName="observaciones" rows="3" class="form-input"></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+                <textarea formControlName="observaciones" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
               </div>
             </div>
 
             @if (formError()) {
-              <div class="alert alert-danger">{{ formError() }}</div>
+              <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">{{ formError() }}</div>
             }
 
             <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <button type="button" (click)="closeModal()" class="btn btn-secondary">
+              <button type="button" (click)="closeModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Cancelar
               </button>
               <button
                 type="submit"
                 [disabled]="pacienteForm.invalid || saving()"
-                class="btn btn-primary">
+                class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
                 @if (saving()) {
-                  <div class="spinner spinner-sm mr-2"></div>
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 }
                 {{ editingPaciente() ? 'Guardar Cambios' : 'Crear Paciente' }}
               </button>
@@ -374,15 +374,15 @@ import { debounceTime, Subject } from 'rxjs';
               Esta acción no se puede deshacer.
             </p>
             <div class="flex gap-3 mt-6">
-              <button (click)="closeDeleteModal()" class="btn btn-secondary flex-1">
+              <button (click)="closeDeleteModal()" class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Cancelar
               </button>
               <button
                 (click)="deletePaciente()"
                 [disabled]="deleting()"
-                class="btn btn-danger flex-1">
+                class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 disabled:opacity-50">
                 @if (deleting()) {
-                  <div class="spinner spinner-sm mr-2"></div>
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 }
                 Eliminar
               </button>

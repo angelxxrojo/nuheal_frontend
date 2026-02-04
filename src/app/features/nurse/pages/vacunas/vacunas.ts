@@ -29,7 +29,7 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
           <h1 class="text-2xl font-semibold text-gray-900">Vacunas</h1>
           <p class="mt-1 text-sm text-gray-500">Gestión de vacunación según esquema nacional</p>
         </div>
-        <button (click)="openDosisModal()" class="btn btn-primary">
+        <button (click)="openDosisModal()" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
@@ -74,33 +74,33 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
       @if (activeTab() === 'pendientes') {
         @if (loadingPendientes()) {
           <div class="flex justify-center py-12">
-            <div class="spinner spinner-lg"></div>
+            <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         } @else if (pacientesPendientes().length === 0) {
-          <div class="card card-body">
-            <div class="empty-state">
-              <svg class="empty-state-icon text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
+            <div class="text-center py-8">
+              <svg class="w-12 h-12 mx-auto text-gray-400 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              <p class="empty-state-title">Todos al día</p>
-              <p class="empty-state-description">No hay pacientes con vacunas pendientes o vencidas</p>
+              <p class="mt-2 text-sm font-medium text-gray-900">Todos al día</p>
+              <p class="mt-1 text-sm text-gray-500">No hay pacientes con vacunas pendientes o vencidas</p>
             </div>
           </div>
         } @else {
           <div class="space-y-4">
             @for (item of pacientesPendientes(); track item.paciente.id) {
-              <div class="card hover:shadow-md transition-shadow">
-                <div class="card-body">
+              <div class="bg-white rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="p-5">
                   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div class="flex items-start gap-4">
-                      <div class="avatar avatar-md bg-primary-100 text-primary-700">
+                      <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-medium">
                         {{ getInitials(item.paciente.nombre) }}
                       </div>
                       <div>
                         <div class="flex items-center gap-2">
                           <p class="font-medium text-gray-900">{{ item.paciente.nombre }}</p>
                           @if (item.total_vencidas > 0) {
-                            <span class="badge badge-danger">{{ item.total_vencidas }} vencidas</span>
+                            <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ item.total_vencidas }} vencidas</span>
                           }
                         </div>
                         <p class="text-sm text-gray-500">{{ item.paciente.edad_texto }}</p>
@@ -108,21 +108,21 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
                     </div>
                     <div class="flex flex-wrap gap-2">
                       @for (vencida of item.vencidas.slice(0, 3); track vencida.vacuna_nombre) {
-                        <span class="badge badge-danger">{{ vencida.vacuna_nombre }} - {{ vencida.nombre_dosis }}</span>
+                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ vencida.vacuna_nombre }} - {{ vencida.nombre_dosis }}</span>
                       }
                       @for (proxima of item.proximas.slice(0, 2); track proxima.vacuna_nombre) {
-                        <span class="badge badge-warning">{{ proxima.vacuna_nombre }} - {{ proxima.nombre_dosis }}</span>
+                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{{ proxima.vacuna_nombre }} - {{ proxima.nombre_dosis }}</span>
                       }
                     </div>
                     <div class="flex gap-2">
                       <button
                         (click)="viewCarnet(item.paciente.id)"
-                        class="btn btn-secondary btn-sm">
+                        class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         Ver Carnet
                       </button>
                       <button
                         (click)="openDosisModalForPaciente(item.paciente.id)"
-                        class="btn btn-primary btn-sm">
+                        class="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700">
                         Vacunar
                       </button>
                     </div>
@@ -136,18 +136,18 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
 
       <!-- Tab: Carnet -->
       @if (activeTab() === 'carnet') {
-        <div class="card card-body">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
           <div class="relative">
             <input
               type="text"
               [(ngModel)]="carnetSearch"
               (ngModelChange)="onCarnetSearch($event)"
               placeholder="Buscar paciente por nombre o documento..."
-              class="form-input w-full"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 w-full"
             >
             @if (searchingCarnet()) {
               <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                <div class="spinner spinner-sm"></div>
+                <div class="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
               </div>
             }
             @if (carnetSearchResults().length > 0) {
@@ -158,7 +158,7 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
                     (click)="viewCarnet(p.id)"
                     class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
                   >
-                    <div class="avatar avatar-sm bg-primary-100 text-primary-700">
+                    <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-medium">
                       {{ p.nombres.charAt(0) }}{{ p.apellido_paterno.charAt(0) }}
                     </div>
                     <div>
@@ -174,15 +174,15 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
 
         @if (loadingCarnet()) {
           <div class="flex justify-center py-12">
-            <div class="spinner spinner-lg"></div>
+            <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         } @else if (carnetData()) {
           <div class="space-y-6">
             <!-- Paciente Info -->
-            <div class="card card-body bg-primary-50 border-primary-200">
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-5 bg-primary-50 border-primary-200">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                  <div class="avatar avatar-lg bg-primary-600 text-white">
+                  <div class="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center text-lg font-medium">
                     {{ getInitials(carnetData()!.paciente.nombre) }}
                   </div>
                   <div>
@@ -190,7 +190,7 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
                     <p class="text-gray-600">{{ carnetData()!.paciente.edad_texto }} • Nacimiento: {{ carnetData()!.paciente.fecha_nacimiento | date:'dd/MM/yyyy' }}</p>
                   </div>
                 </div>
-                <button (click)="openDosisModalForPaciente(carnetData()!.paciente.id)" class="btn btn-primary">
+                <button (click)="openDosisModalForPaciente(carnetData()!.paciente.id)" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
                   Registrar Vacuna
                 </button>
               </div>
@@ -198,19 +198,19 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
 
             <!-- Resumen -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div class="card card-body text-center">
+              <div class="bg-white rounded-lg shadow border border-gray-200 p-5 text-center">
                 <p class="text-sm text-gray-500">Aplicadas</p>
                 <p class="text-3xl font-bold text-green-600">{{ carnetData()!.resumen.total_aplicadas }}</p>
               </div>
-              <div class="card card-body text-center">
+              <div class="bg-white rounded-lg shadow border border-gray-200 p-5 text-center">
                 <p class="text-sm text-gray-500">Pendientes</p>
                 <p class="text-3xl font-bold text-yellow-600">{{ carnetData()!.resumen.total_pendientes }}</p>
               </div>
-              <div class="card card-body text-center">
+              <div class="bg-white rounded-lg shadow border border-gray-200 p-5 text-center">
                 <p class="text-sm text-gray-500">Vencidas</p>
                 <p class="text-3xl font-bold text-red-600">{{ carnetData()!.resumen.total_vencidas }}</p>
               </div>
-              <div class="card card-body text-center">
+              <div class="bg-white rounded-lg shadow border border-gray-200 p-5 text-center">
                 <p class="text-sm text-gray-500">Estado</p>
                 @if (carnetData()!.resumen.tiene_vacunas_pendientes_urgentes) {
                   <span class="badge badge-danger text-lg px-4 py-2">Atrasado</span>
@@ -224,8 +224,8 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
 
             <!-- Dosis Vencidas -->
             @if (carnetData()!.dosis_vencidas.length > 0) {
-              <div class="card">
-                <div class="card-header bg-red-50 border-red-200">
+              <div class="bg-white rounded-lg shadow border border-gray-200">
+                <div class="px-5 py-4 border-b border-gray-200 bg-red-50 border-red-200">
                   <h3 class="font-semibold text-red-800 flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
@@ -233,10 +233,10 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
                     Vacunas Vencidas ({{ carnetData()!.dosis_vencidas.length }})
                   </h3>
                 </div>
-                <div class="card-body">
+                <div class="p-5">
                   <div class="flex flex-wrap gap-2">
                     @for (dosis of carnetData()!.dosis_vencidas; track dosis.id) {
-                      <span class="badge badge-danger">
+                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         {{ dosis.vacuna_nombre || dosis.vacuna?.nombre }} - {{ dosis.nombre_dosis }}
                         (desde {{ dosis.edad_meses_ideal }} meses)
                       </span>
@@ -248,14 +248,14 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
 
             <!-- Próximas Dosis -->
             @if (carnetData()!.proximas_dosis.length > 0) {
-              <div class="card">
-                <div class="card-header bg-yellow-50 border-yellow-200">
+              <div class="bg-white rounded-lg shadow border border-gray-200">
+                <div class="px-5 py-4 border-b border-gray-200 bg-yellow-50 border-yellow-200">
                   <h3 class="font-semibold text-yellow-800">Próximas Vacunas ({{ carnetData()!.proximas_dosis.length }})</h3>
                 </div>
-                <div class="card-body">
+                <div class="p-5">
                   <div class="flex flex-wrap gap-2">
                     @for (dosis of carnetData()!.proximas_dosis; track dosis.id) {
-                      <span class="badge badge-warning">
+                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                         {{ dosis.vacuna_nombre || dosis.vacuna?.nombre }} - {{ dosis.nombre_dosis }}
                         ({{ dosis.edad_meses_ideal }} meses)
                       </span>
@@ -266,8 +266,8 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
             }
 
             <!-- Historial de Vacunas Aplicadas -->
-            <div class="card">
-              <div class="card-header">
+            <div class="bg-white rounded-lg shadow border border-gray-200">
+              <div class="px-5 py-4 border-b border-gray-200">
                 <h3 class="font-semibold text-gray-900">Historial de Vacunas Aplicadas</h3>
               </div>
               @if (carnetData()!.dosis_aplicadas.length === 0) {
@@ -276,7 +276,7 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
                 </div>
               } @else {
                 <div class="overflow-x-auto">
-                  <table class="table">
+                  <table class="min-w-full divide-y divide-gray-200">
                     <thead>
                       <tr>
                         <th>Vacuna</th>
@@ -306,9 +306,9 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
                           </td>
                           <td>
                             @if (dosis.aplicada_a_tiempo) {
-                              <span class="badge badge-success">A tiempo</span>
+                              <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">A tiempo</span>
                             } @else {
-                              <span class="badge badge-warning">Tardía</span>
+                              <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Tardía</span>
                             }
                           </td>
                         </tr>
@@ -320,13 +320,13 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
             </div>
           </div>
         } @else {
-          <div class="card card-body">
-            <div class="empty-state">
-              <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
+            <div class="text-center py-8">
+              <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              <p class="empty-state-title">Buscar Paciente</p>
-              <p class="empty-state-description">Ingresa el nombre o documento del paciente para ver su carnet de vacunación</p>
+              <p class="mt-2 text-sm font-medium text-gray-900">Buscar Paciente</p>
+              <p class="mt-1 text-sm text-gray-500">Ingresa el nombre o documento del paciente para ver su carnet de vacunación</p>
             </div>
           </div>
         }
@@ -336,27 +336,27 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
       @if (activeTab() === 'esquema') {
         @if (loadingEsquema()) {
           <div class="flex justify-center py-12">
-            <div class="spinner spinner-lg"></div>
+            <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         } @else {
           <div class="space-y-4">
             @for (item of esquemaNacional(); track item.vacuna.id) {
-              <div class="card">
-                <div class="card-header bg-gray-50 flex items-center justify-between">
+              <div class="bg-white rounded-lg shadow border border-gray-200">
+                <div class="px-5 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
                   <div>
                     <h3 class="font-semibold text-gray-900">{{ item.vacuna.nombre }}</h3>
                     <p class="text-sm text-gray-500">{{ item.vacuna.enfermedad_previene }}</p>
                   </div>
-                  <span class="badge badge-gray">{{ item.vacuna.via_administracion_display || item.vacuna.via_administracion }}</span>
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ item.vacuna.via_administracion_display || item.vacuna.via_administracion }}</span>
                 </div>
-                <div class="card-body">
+                <div class="p-5">
                   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @for (dosis of item.dosis; track dosis.id) {
                       <div class="p-3 bg-gray-50 rounded-lg">
                         <div class="flex items-center justify-between mb-2">
                           <span class="font-medium text-gray-900">{{ dosis.nombre_dosis }}</span>
                           @if (dosis.es_refuerzo) {
-                            <span class="badge badge-info text-xs">Refuerzo</span>
+                            <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Refuerzo</span>
                           }
                         </div>
                         <div class="text-sm text-gray-600">
@@ -389,7 +389,7 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
           <form [formGroup]="dosisForm" (ngSubmit)="saveDosis()" class="p-6 space-y-4">
             <!-- Paciente -->
             <div>
-              <label class="form-label">Paciente *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Paciente *</label>
               @if (!selectedPaciente()) {
                 <div class="relative">
                   <input
@@ -398,7 +398,7 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
                     [ngModelOptions]="{standalone: true}"
                     (ngModelChange)="onModalPacienteSearch($event)"
                     placeholder="Buscar paciente..."
-                    class="form-input"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
                   >
                   @if (modalPacienteResults().length > 0) {
                     <div class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -421,7 +421,7 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
                     <p class="font-medium">{{ selectedPaciente()!.nombre_completo }}</p>
                     <p class="text-sm text-gray-500">{{ selectedPaciente()!.edad_texto }}</p>
                   </div>
-                  <button type="button" (click)="clearPaciente()" class="btn btn-ghost btn-sm">
+                  <button type="button" (click)="clearPaciente()" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -432,8 +432,8 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
 
             <!-- Vacuna -->
             <div>
-              <label class="form-label">Vacuna *</label>
-              <select formControlName="vacuna" class="form-input" (change)="onVacunaChange()">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Vacuna *</label>
+              <select formControlName="vacuna" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" (change)="onVacunaChange()">
                 <option value="">Seleccionar vacuna...</option>
                 @for (v of catalogo(); track v.id) {
                   <option [value]="v.id">{{ v.nombre }} - {{ v.enfermedad_previene }}</option>
@@ -443,8 +443,8 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
 
             <!-- Dosis -->
             <div>
-              <label class="form-label">Dosis *</label>
-              <select formControlName="esquema_dosis" class="form-input" [disabled]="!dosisDisponibles().length">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Dosis *</label>
+              <select formControlName="esquema_dosis" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" [disabled]="!dosisDisponibles().length">
                 <option value="">Seleccionar dosis...</option>
                 @for (d of dosisDisponibles(); track d.id) {
                   <option [value]="d.id">{{ d.nombre_dosis }} ({{ d.edad_meses_ideal }} meses)</option>
@@ -454,26 +454,26 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
 
             <!-- Fecha -->
             <div>
-              <label class="form-label">Fecha de Aplicación *</label>
-              <input type="date" formControlName="fecha_aplicacion" class="form-input" [max]="today">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Aplicación *</label>
+              <input type="date" formControlName="fecha_aplicacion" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" [max]="today">
             </div>
 
             <!-- Lote -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="form-label">Lote *</label>
-                <input type="text" formControlName="lote" class="form-input" placeholder="Ej: VAC2024A">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Lote *</label>
+                <input type="text" formControlName="lote" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Ej: VAC2024A">
               </div>
               <div>
-                <label class="form-label">Vencimiento Lote</label>
-                <input type="date" formControlName="fecha_vencimiento_lote" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vencimiento Lote</label>
+                <input type="date" formControlName="fecha_vencimiento_lote" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
               </div>
             </div>
 
             <!-- Sitio -->
             <div>
-              <label class="form-label">Sitio de Aplicación</label>
-              <select formControlName="sitio_aplicacion" class="form-input">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Sitio de Aplicación</label>
+              <select formControlName="sitio_aplicacion" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                 <option value="">Seleccionar...</option>
                 <option value="Brazo derecho">Brazo derecho</option>
                 <option value="Brazo izquierdo">Brazo izquierdo</option>
@@ -488,30 +488,30 @@ type TabType = 'pendientes' | 'carnet' | 'esquema';
 
             <!-- Observaciones -->
             <div>
-              <label class="form-label">Observaciones</label>
-              <textarea formControlName="observaciones" rows="2" class="form-input"></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+              <textarea formControlName="observaciones" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
             </div>
 
             <!-- Reacciones -->
             <div>
-              <label class="form-label">Reacciones Adversas</label>
-              <textarea formControlName="reacciones_adversas" rows="2" class="form-input" placeholder="Registrar si hubo alguna reacción..."></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Reacciones Adversas</label>
+              <textarea formControlName="reacciones_adversas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Registrar si hubo alguna reacción..."></textarea>
             </div>
 
             @if (dosisError()) {
-              <div class="alert alert-danger">{{ dosisError() }}</div>
+              <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">{{ dosisError() }}</div>
             }
 
             <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <button type="button" (click)="closeDosisModal()" class="btn btn-secondary">
+              <button type="button" (click)="closeDosisModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Cancelar
               </button>
               <button
                 type="submit"
                 [disabled]="dosisForm.invalid || !selectedPaciente() || savingDosis()"
-                class="btn btn-primary">
+                class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
                 @if (savingDosis()) {
-                  <div class="spinner spinner-sm mr-2"></div>
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 }
                 Registrar Vacuna
               </button>

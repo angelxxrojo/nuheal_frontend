@@ -29,15 +29,15 @@ import { debounceTime, Subject } from 'rxjs';
       </div>
 
       <!-- Search Paciente -->
-      <div class="card card-body">
-        <label class="form-label">Buscar Paciente</label>
+      <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Buscar Paciente</label>
         <div class="relative">
           <input
             type="text"
             [(ngModel)]="pacienteSearch"
             (ngModelChange)="onPacienteSearch($event)"
             placeholder="Buscar por nombre o documento..."
-            class="form-input w-full"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 w-full"
           >
           @if (searching()) {
             <div class="absolute right-3 top-1/2 -translate-y-1/2">
@@ -52,7 +52,7 @@ import { debounceTime, Subject } from 'rxjs';
                   (click)="selectPaciente(p)"
                   class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
                 >
-                  <div class="avatar avatar-sm bg-primary-100 text-primary-700">
+                  <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-medium">
                     {{ p.nombres.charAt(0) }}{{ p.apellido_paterno.charAt(0) }}
                   </div>
                   <div>
@@ -69,19 +69,19 @@ import { debounceTime, Subject } from 'rxjs';
       <!-- Loading -->
       @if (loadingHistoria()) {
         <div class="flex justify-center py-12">
-          <div class="spinner spinner-lg"></div>
+          <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
       }
 
       <!-- Sin paciente seleccionado -->
       @if (!selectedPaciente() && !loadingHistoria()) {
-        <div class="card card-body">
-          <div class="empty-state">
-            <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
+          <div class="text-center py-8">
+            <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            <p class="empty-state-title">Selecciona un paciente</p>
-            <p class="empty-state-description">Busca un paciente para ver o crear su historia clínica</p>
+            <p class="mt-2 text-sm font-medium text-gray-900">Selecciona un paciente</p>
+            <p class="mt-1 text-sm text-gray-500">Busca un paciente para ver o crear su historia clínica</p>
           </div>
         </div>
       }
@@ -89,10 +89,10 @@ import { debounceTime, Subject } from 'rxjs';
       <!-- Paciente seleccionado -->
       @if (selectedPaciente() && !loadingHistoria()) {
         <!-- Paciente Header -->
-        <div class="card card-body bg-primary-50 border-primary-200">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-5 bg-primary-50 border-primary-200">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-              <div class="avatar avatar-lg bg-primary-600 text-white">
+              <div class="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center text-lg font-medium">
                 {{ selectedPaciente()!.nombres.charAt(0) }}{{ selectedPaciente()!.apellido_paterno.charAt(0) }}
               </div>
               <div>
@@ -103,7 +103,7 @@ import { debounceTime, Subject } from 'rxjs';
                 }
               </div>
             </div>
-            <button (click)="clearSelection()" class="btn btn-ghost">
+            <button (click)="clearSelection()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -113,14 +113,14 @@ import { debounceTime, Subject } from 'rxjs';
 
         <!-- No tiene historia -->
         @if (!historia() && !historiaError()) {
-          <div class="card card-body">
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
             <div class="text-center py-8">
               <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
               <h3 class="text-lg font-medium text-gray-900 mb-2">Sin Historia Clínica</h3>
               <p class="text-gray-500 mb-4">Este paciente no tiene historia clínica registrada</p>
-              <button (click)="openHistoriaModal()" class="btn btn-primary">
+              <button (click)="openHistoriaModal()" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
                 Crear Historia Clínica
               </button>
             </div>
@@ -129,7 +129,7 @@ import { debounceTime, Subject } from 'rxjs';
 
         <!-- Error -->
         @if (historiaError()) {
-          <div class="alert alert-danger">
+          <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">
             {{ historiaError() }}
             <button (click)="loadHistoria()" class="ml-2 underline">Reintentar</button>
           </div>
@@ -140,16 +140,16 @@ import { debounceTime, Subject } from 'rxjs';
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Historia Clínica Panel -->
             <div class="lg:col-span-1 space-y-6">
-              <div class="card">
-                <div class="card-header flex items-center justify-between">
+              <div class="bg-white rounded-lg shadow border border-gray-200">
+                <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
                   <h3 class="font-semibold text-gray-900">Datos de Historia</h3>
-                  <button (click)="openHistoriaModal()" class="btn btn-ghost btn-sm">
+                  <button (click)="openHistoriaModal()" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
                   </button>
                 </div>
-                <div class="card-body space-y-4">
+                <div class="p-5 space-y-4">
                   <div>
                     <p class="text-sm text-gray-500">Fecha de Apertura</p>
                     <p class="font-medium">{{ historia()!.fecha_apertura | date:'dd/MM/yyyy' }}</p>
@@ -197,7 +197,7 @@ import { debounceTime, Subject } from 'rxjs';
                   @if (historia()!.grupo_sanguineo) {
                     <div>
                       <p class="text-sm text-gray-500">Grupo Sanguíneo</p>
-                      <span class="badge badge-info">{{ historia()!.grupo_sanguineo_display || historia()!.grupo_sanguineo }}</span>
+                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ historia()!.grupo_sanguineo_display || historia()!.grupo_sanguineo }}</span>
                     </div>
                   }
 
@@ -227,13 +227,13 @@ import { debounceTime, Subject } from 'rxjs';
 
             <!-- Notas SOAPIE Panel -->
             <div class="lg:col-span-2">
-              <div class="card">
-                <div class="card-header flex items-center justify-between">
+              <div class="bg-white rounded-lg shadow border border-gray-200">
+                <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
                   <h3 class="font-semibold text-gray-900">
                     Notas de Enfermería SOAPIE
                     <span class="text-gray-500 font-normal">({{ notas().length }})</span>
                   </h3>
-                  <button (click)="openNotaModal()" class="btn btn-primary btn-sm">
+                  <button (click)="openNotaModal()" class="inline-flex items-center px-3 py-1.5 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
@@ -242,11 +242,11 @@ import { debounceTime, Subject } from 'rxjs';
                 </div>
 
                 @if (loadingNotas()) {
-                  <div class="card-body flex justify-center py-8">
-                    <div class="spinner"></div>
+                  <div class="p-5 flex justify-center py-8">
+                    <div class="w-6 h-6 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 } @else if (notas().length === 0) {
-                  <div class="card-body text-center py-8 text-gray-500">
+                  <div class="p-5 text-center py-8 text-gray-500">
                     No hay notas registradas
                   </div>
                 } @else {
@@ -262,10 +262,10 @@ import { debounceTime, Subject } from 'rxjs';
                           </div>
                           <div class="flex items-center gap-2">
                             @if (nota.temperatura) {
-                              <span class="badge badge-gray">{{ nota.temperatura }}°C</span>
+                              <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ nota.temperatura }}°C</span>
                             }
                             @if (nota.frecuencia_cardiaca) {
-                              <span class="badge badge-gray">{{ nota.frecuencia_cardiaca }} bpm</span>
+                              <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ nota.frecuencia_cardiaca }} bpm</span>
                             }
                           </div>
                         </div>
@@ -296,32 +296,32 @@ import { debounceTime, Subject } from 'rxjs';
             <h4 class="font-medium text-gray-900">Datos del Nacimiento</h4>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
-                <label class="form-label">Peso (gr)</label>
-                <input type="number" formControlName="peso_nacimiento_gr" class="form-input" placeholder="3200">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Peso (gr)</label>
+                <input type="number" formControlName="peso_nacimiento_gr" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="3200">
               </div>
               <div>
-                <label class="form-label">Talla (cm)</label>
-                <input type="number" formControlName="talla_nacimiento_cm" class="form-input" step="0.1" placeholder="50.5">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Talla (cm)</label>
+                <input type="number" formControlName="talla_nacimiento_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1" placeholder="50.5">
               </div>
               <div>
-                <label class="form-label">P. Cefálico (cm)</label>
-                <input type="number" formControlName="perimetro_cefalico_nacimiento_cm" class="form-input" step="0.1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">P. Cefálico (cm)</label>
+                <input type="number" formControlName="perimetro_cefalico_nacimiento_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1">
               </div>
               <div>
-                <label class="form-label">Semanas Gestación</label>
-                <input type="number" formControlName="semanas_gestacion" class="form-input" placeholder="39">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Semanas Gestación</label>
+                <input type="number" formControlName="semanas_gestacion" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="39">
               </div>
               <div>
-                <label class="form-label">Tipo de Parto</label>
-                <select formControlName="tipo_parto" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Parto</label>
+                <select formControlName="tipo_parto" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                   <option value="">Seleccionar...</option>
                   <option value="vaginal">Vaginal</option>
                   <option value="cesarea">Cesárea</option>
                 </select>
               </div>
               <div>
-                <label class="form-label">Grupo Sanguíneo</label>
-                <select formControlName="grupo_sanguineo" class="form-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Grupo Sanguíneo</label>
+                <select formControlName="grupo_sanguineo" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
                   <option value="">Seleccionar...</option>
                   <option value="A+">A+</option>
                   <option value="A-">A-</option>
@@ -338,52 +338,52 @@ import { debounceTime, Subject } from 'rxjs';
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="form-label">APGAR 1 min</label>
-                <input type="number" formControlName="apgar_1min" class="form-input" min="0" max="10">
+                <label class="block text-sm font-medium text-gray-700 mb-1">APGAR 1 min</label>
+                <input type="number" formControlName="apgar_1min" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" min="0" max="10">
               </div>
               <div>
-                <label class="form-label">APGAR 5 min</label>
-                <input type="number" formControlName="apgar_5min" class="form-input" min="0" max="10">
+                <label class="block text-sm font-medium text-gray-700 mb-1">APGAR 5 min</label>
+                <input type="number" formControlName="apgar_5min" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" min="0" max="10">
               </div>
             </div>
 
             <h4 class="font-medium text-gray-900 pt-4 border-t border-gray-200">Antecedentes</h4>
             <div>
-              <label class="form-label">Alergias</label>
-              <input type="text" formControlName="alergias" class="form-input" placeholder="Ninguna conocida">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Alergias</label>
+              <input type="text" formControlName="alergias" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Ninguna conocida">
             </div>
             <div>
-              <label class="form-label">Antecedentes Personales</label>
-              <textarea formControlName="antecedentes_personales" rows="2" class="form-input"></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Antecedentes Personales</label>
+              <textarea formControlName="antecedentes_personales" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
             </div>
             <div>
-              <label class="form-label">Antecedentes Familiares</label>
-              <textarea formControlName="antecedentes_familiares" rows="2" class="form-input"></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Antecedentes Familiares</label>
+              <textarea formControlName="antecedentes_familiares" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
             </div>
             <div>
-              <label class="form-label">Antecedentes Perinatales</label>
-              <textarea formControlName="antecedentes_perinatales" rows="2" class="form-input"></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Antecedentes Perinatales</label>
+              <textarea formControlName="antecedentes_perinatales" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
             </div>
             <div>
-              <label class="form-label">Tipo de Alimentación</label>
-              <input type="text" formControlName="tipo_alimentacion" class="form-input" placeholder="Lactancia materna exclusiva">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Alimentación</label>
+              <input type="text" formControlName="tipo_alimentacion" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Lactancia materna exclusiva">
             </div>
             <div>
-              <label class="form-label">Observaciones</label>
-              <textarea formControlName="observaciones" rows="2" class="form-input"></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+              <textarea formControlName="observaciones" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
             </div>
 
             @if (historiaFormError()) {
-              <div class="alert alert-danger">{{ historiaFormError() }}</div>
+              <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">{{ historiaFormError() }}</div>
             }
 
             <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <button type="button" (click)="closeHistoriaModal()" class="btn btn-secondary">
+              <button type="button" (click)="closeHistoriaModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Cancelar
               </button>
-              <button type="submit" [disabled]="savingHistoria()" class="btn btn-primary">
+              <button type="submit" [disabled]="savingHistoria()" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
                 @if (savingHistoria()) {
-                  <div class="spinner spinner-sm mr-2"></div>
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 }
                 Guardar
               </button>
@@ -404,67 +404,67 @@ import { debounceTime, Subject } from 'rxjs';
           </div>
           <form [formGroup]="notaForm" (ngSubmit)="saveNota()" class="p-6 space-y-4">
             <div>
-              <label class="form-label">Fecha y Hora *</label>
-              <input type="datetime-local" formControlName="fecha" class="form-input">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fecha y Hora *</label>
+              <input type="datetime-local" formControlName="fecha" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <label class="form-label">Temperatura (°C)</label>
-                <input type="number" formControlName="temperatura" class="form-input" step="0.1" placeholder="36.5">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Temperatura (°C)</label>
+                <input type="number" formControlName="temperatura" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1" placeholder="36.5">
               </div>
               <div>
-                <label class="form-label">FC (bpm)</label>
-                <input type="number" formControlName="frecuencia_cardiaca" class="form-input" placeholder="80">
+                <label class="block text-sm font-medium text-gray-700 mb-1">FC (bpm)</label>
+                <input type="number" formControlName="frecuencia_cardiaca" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="80">
               </div>
               <div>
-                <label class="form-label">FR (rpm)</label>
-                <input type="number" formControlName="frecuencia_respiratoria" class="form-input" placeholder="18">
+                <label class="block text-sm font-medium text-gray-700 mb-1">FR (rpm)</label>
+                <input type="number" formControlName="frecuencia_respiratoria" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="18">
               </div>
               <div>
-                <label class="form-label">SatO2 (%)</label>
-                <input type="number" formControlName="saturacion_oxigeno" class="form-input" placeholder="98">
+                <label class="block text-sm font-medium text-gray-700 mb-1">SatO2 (%)</label>
+                <input type="number" formControlName="saturacion_oxigeno" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="98">
               </div>
             </div>
 
             <div class="bg-blue-50 p-4 rounded-lg space-y-4">
               <div>
-                <label class="form-label text-blue-800">S - Subjetivo *</label>
-                <textarea formControlName="subjetivo" rows="2" class="form-input" placeholder="Lo que el paciente o familiar refiere..."></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1 text-blue-800">S - Subjetivo *</label>
+                <textarea formControlName="subjetivo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Lo que el paciente o familiar refiere..."></textarea>
               </div>
               <div>
-                <label class="form-label text-blue-800">O - Objetivo *</label>
-                <textarea formControlName="objetivo" rows="2" class="form-input" placeholder="Hallazgos de la valoración física..."></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1 text-blue-800">O - Objetivo *</label>
+                <textarea formControlName="objetivo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Hallazgos de la valoración física..."></textarea>
               </div>
               <div>
-                <label class="form-label text-blue-800">A - Análisis *</label>
-                <textarea formControlName="analisis" rows="2" class="form-input" placeholder="Diagnóstico de enfermería..."></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1 text-blue-800">A - Análisis *</label>
+                <textarea formControlName="analisis" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Diagnóstico de enfermería..."></textarea>
               </div>
               <div>
-                <label class="form-label text-blue-800">P - Planificación *</label>
-                <textarea formControlName="planificacion" rows="2" class="form-input" placeholder="Plan de cuidados..."></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1 text-blue-800">P - Planificación *</label>
+                <textarea formControlName="planificacion" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Plan de cuidados..."></textarea>
               </div>
               <div>
-                <label class="form-label text-blue-800">I - Intervención *</label>
-                <textarea formControlName="intervencion" rows="2" class="form-input" placeholder="Acciones realizadas..."></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1 text-blue-800">I - Intervención *</label>
+                <textarea formControlName="intervencion" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Acciones realizadas..."></textarea>
               </div>
               <div>
-                <label class="form-label text-blue-800">E - Evaluación *</label>
-                <textarea formControlName="evaluacion" rows="2" class="form-input" placeholder="Resultado de las intervenciones..."></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1 text-blue-800">E - Evaluación *</label>
+                <textarea formControlName="evaluacion" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="Resultado de las intervenciones..."></textarea>
               </div>
             </div>
 
             @if (notaFormError()) {
-              <div class="alert alert-danger">{{ notaFormError() }}</div>
+              <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">{{ notaFormError() }}</div>
             }
 
             <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <button type="button" (click)="closeNotaModal()" class="btn btn-secondary">
+              <button type="button" (click)="closeNotaModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Cancelar
               </button>
-              <button type="submit" [disabled]="notaForm.invalid || savingNota()" class="btn btn-primary">
+              <button type="submit" [disabled]="notaForm.invalid || savingNota()" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
                 @if (savingNota()) {
-                  <div class="spinner spinner-sm mr-2"></div>
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 }
                 Guardar Nota
               </button>
@@ -480,7 +480,7 @@ import { debounceTime, Subject } from 'rxjs';
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideIn">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900">Detalle de Nota SOAPIE</h2>
-            <button (click)="closeNotaDetailModal()" class="btn btn-ghost btn-sm">
+            <button (click)="closeNotaDetailModal()" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -491,10 +491,10 @@ import { debounceTime, Subject } from 'rxjs';
               <div class="flex items-center justify-between">
                 <p class="text-lg font-medium">{{ viewingNota()!.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
                 <div class="flex gap-2">
-                  <button (click)="editNota(viewingNota()!)" class="btn btn-secondary btn-sm">
+                  <button (click)="editNota(viewingNota()!)" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                     Editar
                   </button>
-                  <button (click)="confirmDeleteNota(viewingNota()!)" class="btn btn-danger btn-sm">
+                  <button (click)="confirmDeleteNota(viewingNota()!)" class="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
                     Eliminar
                   </button>
                 </div>
