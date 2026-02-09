@@ -1,15 +1,18 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AdminPageBreadcrumbComponent } from '../../components/admin-page-breadcrumb/admin-page-breadcrumb.component';
 
 @Component({
   selector: 'app-plans',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdminPageBreadcrumbComponent],
   template: `
     <div>
-      <h1 class="text-2xl font-semibold text-white">Gestión de Planes</h1>
-      <p class="mt-1 text-sm text-gray-400">Configura los planes y sus características</p>
-      <!-- TODO: Implement plans management -->
+      <app-admin-page-breadcrumb pageTitle="Gestión de Planes" />
+      <div class="rounded-2xl border border-gray-700 bg-gray-800 p-6">
+        <p class="text-gray-400">Configura los planes y sus características</p>
+        <!-- TODO: Implement plans management -->
+      </div>
     </div>
   `
 })

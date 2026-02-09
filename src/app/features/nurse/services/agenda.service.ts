@@ -10,7 +10,15 @@ import {
   CitaCreate,
   DisponibilidadResponse,
   ConfiguracionAgenda,
-  CitasHoyResponse
+  CitasHoyResponse,
+  BloqueoAgenda,
+  BloqueoAgendaCreate,
+  PatronRecurrencia,
+  PatronRecurrenciaCreate,
+  ListaEspera,
+  ListaEsperaCreate,
+  PlanTratamiento,
+  PlanTratamientoCreate
 } from '../../../models/cita.model';
 
 export interface CitasQueryParams {
@@ -30,7 +38,8 @@ export class AgendaService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/agenda`;
 
-  // Configuración
+  // --- Configuración ---
+
   getConfiguracion(): Observable<ConfiguracionAgenda> {
     return this.http.get<ConfiguracionAgenda>(`${this.apiUrl}/configuracion/`);
   }
@@ -39,7 +48,8 @@ export class AgendaService {
     return this.http.patch<ConfiguracionAgenda>(`${this.apiUrl}/configuracion/`, data);
   }
 
-  // Tipos de Servicio
+  // --- Tipos de Servicio ---
+
   getServicios(): Observable<TipoServicio[]> {
     return this.http.get<TipoServicio[]>(`${this.apiUrl}/servicios/`);
   }
@@ -60,7 +70,8 @@ export class AgendaService {
     return this.http.delete<void>(`${this.apiUrl}/servicios/${id}/`);
   }
 
-  // Citas
+  // --- Citas ---
+
   getCitas(params?: CitasQueryParams): Observable<PaginatedResponse<Cita>> {
     let httpParams = new HttpParams();
 
@@ -108,7 +119,8 @@ export class AgendaService {
     return this.http.post<Cita>(`${this.apiUrl}/citas/${id}/no-asistio/`, {});
   }
 
-  // Disponibilidad
+  // --- Disponibilidad ---
+
   getDisponibilidad(fecha: string, tipoServicio?: number): Observable<DisponibilidadResponse> {
     let params = new HttpParams().set('fecha', fecha);
     if (tipoServicio) {
@@ -117,12 +129,79 @@ export class AgendaService {
     return this.http.get<DisponibilidadResponse>(`${this.apiUrl}/disponibilidad/`, { params });
   }
 
-  // Vistas rápidas
+  // --- Vistas rápidas ---
+
   getCitasHoy(): Observable<CitasHoyResponse> {
     return this.http.get<CitasHoyResponse>(`${this.apiUrl}/citas-hoy/`);
   }
 
   getProximasCitas(): Observable<Cita[]> {
     return this.http.get<Cita[]>(`${this.apiUrl}/proximas/`);
+  }
+
+  // --- Bloqueos de Agenda ---
+
+  getBloqueos(): Observable<BloqueoAgenda[]> {
+    return this.http.get<BloqueoAgenda[]>(`${this.apiUrl}/bloqueos/`);
+  }
+
+  createBloqueo(data: BloqueoAgendaCreate): Observable<BloqueoAgenda> {
+    return this.http.post<BloqueoAgenda>(`${this.apiUrl}/bloqueos/`, data);
+  }
+
+  updateBloqueo(id: number, data: Partial<BloqueoAgendaCreate>): Observable<BloqueoAgenda> {
+    return this.http.patch<BloqueoAgenda>(`${this.apiUrl}/bloqueos/${id}/`, data);
+  }
+
+  deleteBloqueo(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/bloqueos/${id}/`);
+  }
+
+  // --- Patrones de Recurrencia ---
+
+  getPatrones(): Observable<PatronRecurrencia[]> {
+    return this.http.get<PatronRecurrencia[]>(`${this.apiUrl}/patrones-recurrencia/`);
+  }
+
+  createPatron(data: PatronRecurrenciaCreate): Observable<PatronRecurrencia> {
+    return this.http.post<PatronRecurrencia>(`${this.apiUrl}/patrones-recurrencia/`, data);
+  }
+
+  // --- Lista de Espera ---
+
+  getListaEspera(estado?: string): Observable<ListaEspera[]> {
+    let params = new HttpParams();
+    if (estado) params = params.set('estado', estado);
+    return this.http.get<ListaEspera[]>(`${this.apiUrl}/lista-espera/`, { params });
+  }
+
+  createListaEspera(data: ListaEsperaCreate): Observable<ListaEspera> {
+    return this.http.post<ListaEspera>(`${this.apiUrl}/lista-espera/`, data);
+  }
+
+  updateListaEspera(id: number, data: Partial<ListaEspera>): Observable<ListaEspera> {
+    return this.http.patch<ListaEspera>(`${this.apiUrl}/lista-espera/${id}/`, data);
+  }
+
+  // --- Planes de Tratamiento ---
+
+  getPlanesTratamiento(params?: { estado?: string; paciente?: number }): Observable<PlanTratamiento[]> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          httpParams = httpParams.set(key, value.toString());
+        }
+      });
+    }
+    return this.http.get<PlanTratamiento[]>(`${this.apiUrl}/planes-tratamiento/`, { params: httpParams });
+  }
+
+  createPlanTratamiento(data: PlanTratamientoCreate | FormData): Observable<PlanTratamiento> {
+    return this.http.post<PlanTratamiento>(`${this.apiUrl}/planes-tratamiento/`, data);
+  }
+
+  completarSesion(planId: number): Observable<PlanTratamiento> {
+    return this.http.post<PlanTratamiento>(`${this.apiUrl}/planes-tratamiento/${planId}/completar_sesion/`, {});
   }
 }

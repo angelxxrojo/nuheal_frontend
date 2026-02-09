@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from './sidebar/sidebar';
 import { HeaderComponent } from './header/header';
+import { SidebarService } from '../../../core/services/sidebar.service';
 
 @Component({
   selector: 'app-nurse-layout',
@@ -12,29 +13,20 @@ import { HeaderComponent } from './header/header';
     <!-- Page Wrapper - Same as TailAdmin -->
     <div class="flex h-screen overflow-hidden">
       <!-- Sidebar -->
-      <app-sidebar
-        [collapsed]="sidebarCollapsed()"
-        [mobileOpen]="mobileSidebarOpen()"
-        (toggleCollapse)="toggleSidebar()"
-        (closeMobile)="closeMobileSidebar()"
-      />
+      <app-sidebar />
 
       <!-- Content Area -->
       <div class="relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
         <!-- Small Device Overlay -->
-        @if (mobileSidebarOpen()) {
+        @if (sidebarService.isMobileOpen$ | async) {
           <div
             class="fixed inset-0 z-40 bg-gray-900/50 lg:hidden"
-            (click)="closeMobileSidebar()"
+            (click)="sidebarService.setMobileOpen(false)"
           ></div>
         }
 
         <!-- Header -->
-        <app-header
-          [sidebarCollapsed]="sidebarCollapsed()"
-          (toggleSidebar)="toggleSidebar()"
-          (toggleMobileSidebar)="toggleMobileSidebar()"
-        />
+        <app-header />
 
         <!-- Main Content -->
         <main>
@@ -52,18 +44,5 @@ import { HeaderComponent } from './header/header';
   `]
 })
 export class NurseLayoutComponent {
-  sidebarCollapsed = signal(false);
-  mobileSidebarOpen = signal(false);
-
-  toggleSidebar(): void {
-    this.sidebarCollapsed.update(v => !v);
-  }
-
-  toggleMobileSidebar(): void {
-    this.mobileSidebarOpen.update(v => !v);
-  }
-
-  closeMobileSidebar(): void {
-    this.mobileSidebarOpen.set(false);
-  }
+  sidebarService = inject(SidebarService);
 }

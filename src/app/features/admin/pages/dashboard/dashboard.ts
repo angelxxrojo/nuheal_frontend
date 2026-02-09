@@ -2,20 +2,15 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AdminService, SystemMetrics } from '../../services/admin.service';
+import { AdminPageBreadcrumbComponent } from '../../components/admin-page-breadcrumb/admin-page-breadcrumb.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AdminPageBreadcrumbComponent],
   template: `
     <div class="space-y-6">
-      <!-- Page Header -->
-      <div>
-        <h1 class="text-2xl font-semibold text-white">Dashboard Administrativo</h1>
-        <p class="mt-1 text-sm text-gray-400">
-          Métricas generales del sistema NuHeal
-        </p>
-      </div>
+      <app-admin-page-breadcrumb pageTitle="Dashboard Administrativo" />
 
       @if (loading()) {
         <div class="flex justify-center py-12">

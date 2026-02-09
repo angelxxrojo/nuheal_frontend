@@ -1,4 +1,6 @@
 export type ViaAdministracion = 'IM' | 'SC' | 'ID' | 'VO' | 'IN';
+export type OrigenInsumo = 'stock_propio' | 'traido_paciente';
+export type EstadoCerteza = 'verificado' | 'declarado' | 'desconocido';
 
 export interface Vacuna {
   id: number;
@@ -11,6 +13,8 @@ export interface Vacuna {
   via_administracion_display?: string;
   dosis_ml: string;
   sitio_aplicacion?: string;
+  contraindicaciones?: string;
+  efectos_secundarios?: string;
 }
 
 export interface EsquemaDosis {
@@ -33,26 +37,44 @@ export interface EsquemaNacional {
 
 export interface DosisAplicada {
   id: number;
-  vacuna: Vacuna;
-  esquema_dosis: EsquemaDosis;
+  vacuna?: Vacuna;
+  esquema_dosis?: EsquemaDosis;
+  vacuna_nombre_manual?: string;
+  vacuna_laboratorio?: string;
+  nombre_vacuna_display: string;
   fecha_aplicacion: string;
-  lote: string;
+  lote?: string;
   fecha_vencimiento_lote?: string;
+  lote_vacuna?: number;
   sitio_aplicacion?: string;
   edad_aplicacion_meses: number;
+  origen_insumo: OrigenInsumo;
+  origen_insumo_display?: string;
+  foto_receta_medica?: string;
+  foto_envase?: string;
+  estado_certeza: EstadoCerteza;
+  estado_certeza_display?: string;
   observaciones?: string;
   reacciones_adversas?: string;
-  aplicada_a_tiempo: boolean;
+  aplicada_a_tiempo?: boolean | null;
+  created_at?: string;
 }
 
 export interface DosisAplicadaCreate {
   paciente: number;
-  vacuna: number;
-  esquema_dosis: number;
+  vacuna?: number;
+  esquema_dosis?: number;
+  vacuna_nombre_manual?: string;
+  vacuna_laboratorio?: string;
   fecha_aplicacion: string;
-  lote: string;
+  lote?: string;
   fecha_vencimiento_lote?: string;
+  lote_vacuna?: number;
   sitio_aplicacion?: string;
+  origen_insumo?: OrigenInsumo;
+  foto_receta_medica?: File;
+  foto_envase?: File;
+  estado_certeza?: EstadoCerteza;
   observaciones?: string;
   reacciones_adversas?: string;
 }
@@ -94,4 +116,59 @@ export interface PacienteVacunasPendientes {
     vacuna_nombre: string;
     nombre_dosis: string;
   }[];
+}
+
+export interface LoteVacuna {
+  id: number;
+  vacuna: number;
+  vacuna_nombre?: string;
+  numero_lote: string;
+  fecha_vencimiento: string;
+  stock_inicial: number;
+  stock_actual: number;
+  proveedor?: string;
+  fecha_adquisicion?: string;
+  observaciones?: string;
+  esta_vencido: boolean;
+  esta_por_vencer: boolean;
+  stock_bajo: boolean;
+  created_at?: string;
+}
+
+export interface LoteVacunaCreate {
+  vacuna: number;
+  numero_lote: string;
+  fecha_vencimiento: string;
+  stock_inicial: number;
+  stock_actual?: number;
+  proveedor?: string;
+  fecha_adquisicion?: string;
+  observaciones?: string;
+}
+
+export interface NoVacunacion {
+  id: number;
+  paciente: number;
+  paciente_nombre?: string;
+  esquema_dosis: number;
+  dosis_nombre?: string;
+  vacuna_nombre?: string;
+  fecha: string;
+  motivo: 'enfermo' | 'rechazo_padres' | 'desabastecimiento' | 'contraindicacion' | 'otro';
+  motivo_display?: string;
+  detalle?: string;
+  created_at?: string;
+}
+
+export interface NoVacunacionCreate {
+  paciente: number;
+  esquema_dosis: number;
+  fecha: string;
+  motivo: string;
+  detalle?: string;
+}
+
+export interface AlertaLote {
+  lote: LoteVacuna;
+  alertas: ('vencido' | 'por_vencer' | 'stock_bajo')[];
 }

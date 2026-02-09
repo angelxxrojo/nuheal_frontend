@@ -42,11 +42,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
-      console.error('HTTP Error:', {
-        status: error.status,
-        message: errorMessage,
-        url: error.url
-      });
+      // No loguear 404 ya que puede ser un caso esperado (verificar si existe un recurso)
+      if (error.status !== 404) {
+        console.error('HTTP Error:', {
+          status: error.status,
+          message: errorMessage,
+          url: error.url
+        });
+      }
 
       return throwError(() => ({
         status: error.status,
@@ -68,9 +71,9 @@ function parseValidationErrors(error: ApiErrorResponse): string {
     if (Object.prototype.hasOwnProperty.call(error, key)) {
       const value = error[key];
       if (Array.isArray(value)) {
-        messages.push(...value.map(v => String(v)));
+        messages.push(...value.map(v => `${key}: ${String(v)}`));
       } else if (typeof value === 'string') {
-        messages.push(value);
+        messages.push(`${key}: ${value}`);
       }
     }
   }

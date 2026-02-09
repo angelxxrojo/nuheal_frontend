@@ -1,12 +1,16 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, NavigationEnd } from '@angular/router';
+import { SidebarService } from '../../../../core/services/sidebar.service';
+import { SafeHtmlPipe } from '../../../../shared/pipes/safe-html.pipe';
+import { combineLatest, Subscription } from 'rxjs';
 
 interface MenuItem {
   label: string;
   icon: string;
   route?: string;
-  children?: { label: string; route: string }[];
+  isNew?: boolean;
+  children?: { label: string; route: string; isNew?: boolean; isPro?: boolean }[];
 }
 
 interface MenuGroup {
@@ -17,21 +21,31 @@ interface MenuGroup {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, SafeHtmlPipe],
   template: `
-    <!-- Sidebar - Same structure as TailAdmin -->
+    <!-- Sidebar -->
     <aside
-      [class]="sidebarClasses()"
-      class="sidebar fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden border-r border-gray-200 bg-white px-5 duration-300 ease-linear lg:static lg:translate-x-0"
+      class="fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden border-r border-gray-200 bg-white px-5 transition-all duration-300 ease-in-out lg:static"
+      [ngClass]="{
+        'w-[290px]': (isExpanded$ | async) || (isMobileOpen$ | async) || (isHovered$ | async),
+        'w-[90px]': !((isExpanded$ | async) || (isMobileOpen$ | async) || (isHovered$ | async)),
+        'translate-x-0': (isMobileOpen$ | async),
+        '-translate-x-full': !(isMobileOpen$ | async),
+        'lg:translate-x-0': true
+      }"
+      (mouseenter)="onSidebarMouseEnter()"
+      (mouseleave)="sidebarService.setHovered(false)"
     >
       <!-- SIDEBAR HEADER -->
       <div
         class="flex items-center gap-2 pb-7 pt-8"
-        [class.justify-center]="collapsed()"
-        [class.justify-between]="!collapsed()"
+        [ngClass]="{
+          'lg:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
+          'justify-start': (isExpanded$ | async) || (isHovered$ | async)
+        }"
       >
         <a routerLink="/nurse/dashboard">
-          @if (!collapsed()) {
+          @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
             <span class="text-2xl font-bold text-gray-900">NuHeal</span>
           } @else {
             <span class="text-2xl font-bold text-gray-900">N</span>
@@ -42,106 +56,208 @@ interface MenuGroup {
       <!-- Sidebar Content with scroll -->
       <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         <!-- Sidebar Menu -->
-        <nav>
-          @for (group of menuGroups; track group.title) {
-            <!-- Menu Group -->
-            <div>
-              <h3 class="mb-4 text-xs uppercase leading-5 text-gray-400">
-                @if (!collapsed()) {
-                  <span class="menu-group-title">{{ group.title }}</span>
-                } @else {
-                  <svg class="mx-auto h-6 w-6 fill-current" viewBox="0 0 24 24">
-                    <circle cx="6" cy="12" r="1.5"/>
-                    <circle cx="12" cy="12" r="1.5"/>
-                    <circle cx="18" cy="12" r="1.5"/>
-                  </svg>
-                }
-              </h3>
+        <nav class="mb-6">
+          <div class="flex flex-col gap-4">
+            @for (group of menuGroups; track group.title; let groupIdx = $index) {
+              <!-- Menu Group -->
+              <div>
+                <h3
+                  class="mb-4 text-xs uppercase flex leading-5 text-gray-400"
+                  [ngClass]="{
+                    'lg:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
+                    'justify-start': (isExpanded$ | async) || (isHovered$ | async)
+                  }"
+                >
+                  @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
+                    <span>{{ group.title }}</span>
+                  } @else {
+                    <svg class="h-6 w-6 fill-current" viewBox="0 0 24 24">
+                      <circle cx="6" cy="12" r="1.5"/>
+                      <circle cx="12" cy="12" r="1.5"/>
+                      <circle cx="18" cy="12" r="1.5"/>
+                    </svg>
+                  }
+                </h3>
 
-              <ul class="mb-6 flex flex-col gap-4">
-                @for (item of group.items; track item.label) {
-                  <li>
-                    @if (item.children && item.children.length > 0) {
-                      <!-- Menu Item with Dropdown -->
-                      <button
-                        (click)="toggleSubmenu(item.label)"
-                        class="menu-item group relative flex w-full items-center gap-2.5 rounded-lg px-4 py-2 font-medium text-gray-700 duration-300 ease-in-out hover:bg-gray-100"
-                        [class.bg-gray-100]="isSubmenuOpen(item.label)"
-                        [class.justify-center]="collapsed()"
-                      >
-                        <span [innerHTML]="item.icon" class="h-6 w-6 flex-shrink-0"></span>
-                        @if (!collapsed()) {
-                          <span class="menu-item-text flex-1 text-left">{{ item.label }}</span>
-                          <svg
-                            class="menu-item-arrow h-5 w-5 transition-transform duration-200"
-                            [class.rotate-180]="isSubmenuOpen(item.label)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                        }
-                      </button>
+                <ul class="flex flex-col gap-1">
+                  @for (item of group.items; track item.label; let itemIdx = $index) {
+                    <li>
+                      @if (item.children && item.children.length > 0) {
+                        <!-- Menu Item with Dropdown -->
+                        <button
+                          (click)="toggleSubmenu(groupIdx, itemIdx)"
+                          class="menu-item group relative flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-4 py-2 font-medium duration-300 ease-in-out"
+                          [ngClass]="{
+                            'menu-item-active': openSubmenu === groupIdx + '-' + itemIdx,
+                            'menu-item-inactive text-gray-600 hover:bg-gray-50': openSubmenu !== groupIdx + '-' + itemIdx,
+                            'lg:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
+                            'lg:justify-start': (isExpanded$ | async) || (isHovered$ | async)
+                          }"
+                        >
+                          <span
+                            class="menu-item-icon h-6 w-6 flex-shrink-0"
+       
+                            [innerHTML]="item.icon | safeHtml"
+                          ></span>
 
-                      <!-- Dropdown Menu -->
-                      @if (isSubmenuOpen(item.label) && !collapsed()) {
-                        <div class="translate transform overflow-hidden">
+                          @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
+                            <span class="menu-item-text flex-1 text-left">{{ item.label }}</span>
+
+                            @if (item.isNew) {
+                              <span
+                                class="ml-auto mr-2 rounded-full px-2 py-0.5 text-xs font-medium"
+                                [ngClass]="{
+                                  'bg-brand-100 text-brand-600': openSubmenu === groupIdx + '-' + itemIdx,
+                                  'bg-gray-100 text-gray-600': openSubmenu !== groupIdx + '-' + itemIdx
+                                }"
+                              >
+                                nuevo
+                              </span>
+                            }
+
+                            <svg
+                              class="h-5 w-5 transition-transform duration-200"
+                              [ngClass]="{ 'rotate-180 text-brand-500': openSubmenu === groupIdx + '-' + itemIdx }"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          }
+                        </button>
+
+                        <!-- Dropdown Menu with animated height -->
+                        <div
+                          class="overflow-hidden transition-all duration-300"
+                          [id]="'submenu-' + groupIdx + '-' + itemIdx"
+                          [style.display]="((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) ? 'block' : 'none'"
+                          [ngStyle]="{
+                            height: openSubmenu === groupIdx + '-' + itemIdx
+                              ? (subMenuHeights['submenu-' + groupIdx + '-' + itemIdx] || 0) + 'px'
+                              : '0px'
+                          }"
+                        >
                           <ul class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                             @for (child of item.children; track child.route) {
                               <li>
                                 <a
                                   [routerLink]="child.route"
-                                  routerLinkActive="text-gray-900 font-semibold"
-                                  class="menu-dropdown-item group relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-gray-500 duration-300 ease-in-out hover:text-gray-900"
-                                  (click)="closeMobile.emit()"
+                                  (click)="onSubmenuClick()"
+                                  class="menu-dropdown-item group relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm duration-300 ease-in-out"
+                                  [ngClass]="{
+                                    'menu-dropdown-item-active text-gray-900 font-semibold': isActive(child.route),
+                                    'menu-dropdown-item-inactive text-gray-500 hover:text-gray-900': !isActive(child.route)
+                                  }"
                                 >
                                   {{ child.label }}
+                                  <span class="flex items-center gap-1 ml-auto">
+                                    @if (child.isNew) {
+                                      <span
+                                        class="rounded-full px-2 py-0.5 text-xs font-medium"
+                                        [ngClass]="{
+                                          'bg-brand-100 text-brand-600': isActive(child.route),
+                                          'bg-gray-100 text-gray-600': !isActive(child.route)
+                                        }"
+                                      >
+                                        nuevo
+                                      </span>
+                                    }
+                                    @if (child.isPro) {
+                                      <span
+                                        class="rounded-full px-2 py-0.5 text-xs font-medium"
+                                        [ngClass]="{
+                                          'bg-orange-100 text-orange-600': isActive(child.route),
+                                          'bg-orange-50 text-orange-500': !isActive(child.route)
+                                        }"
+                                      >
+                                        pro
+                                      </span>
+                                    }
+                                  </span>
                                 </a>
                               </li>
                             }
                           </ul>
                         </div>
-                      }
-                    } @else {
-                      <!-- Regular Menu Item -->
-                      <a
-                        [routerLink]="item.route"
-                        routerLinkActive="bg-gray-100 text-gray-900 font-semibold"
-                        [routerLinkActiveOptions]="{ exact: item.route === '/nurse/dashboard' }"
-                        class="menu-item group relative flex items-center gap-2.5 rounded-lg px-4 py-2 font-medium text-gray-600 duration-300 ease-in-out hover:bg-gray-50 hover:text-gray-900"
-                        [class.justify-center]="collapsed()"
-                        (click)="closeMobile.emit()"
-                      >
-                        <span [innerHTML]="item.icon" class="h-6 w-6 flex-shrink-0"></span>
-                        @if (!collapsed()) {
-                          <span class="menu-item-text">{{ item.label }}</span>
+                      } @else {
+                        <!-- Regular Menu Item -->
+                        @if (item.route) {
+                          <a
+                            [routerLink]="item.route"
+                            class="menu-item group relative flex items-center gap-2.5 rounded-lg px-4 py-2 font-medium duration-300 ease-in-out"
+                            [ngClass]="{
+                              'menu-item-active': isActive(item.route),
+                              'menu-item-inactive text-gray-600 hover:bg-gray-50': !isActive(item.route),
+                              'lg:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
+                              'lg:justify-start': (isExpanded$ | async) || (isHovered$ | async)
+                            }"
+                            (click)="onSubmenuClick()"
+                          >
+                            <span
+                              class=" menu-item-icon-size"
+                              [ngClass]="{
+                                'menu-item-icon-active ease-in-out': isActive(item.route),
+                                'text-gray-500': !isActive(item.route)
+                              }"
+                              
+                              [innerHTML]="item.icon | safeHtml"
+                            ></span>
+
+                            @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
+                              <span class="menu-item-text">{{ item.label }}</span>
+                              @if (item.isNew) {
+                                <span
+                                  class="ml-auto rounded-full px-2 py-0.5 text-xs font-medium"
+                                  [ngClass]="{
+                                    'bg-brand-100 text-brand-600': isActive(item.route),
+                                    'bg-gray-100 text-gray-600': !isActive(item.route)
+                                  }"
+                                >
+                                  nuevo
+                                </span>
+                              }
+                            }
+                          </a>
                         }
-                      </a>
-                    }
-                  </li>
-                }
-              </ul>
-            </div>
-          }
+                      }
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
         </nav>
       </div>
 
-      <!-- Sidebar Footer - Configuración -->
+      <!-- Sidebar Footer - Configuracion -->
       <div class="mt-auto border-t border-gray-200 pt-4 pb-6">
         <a
           routerLink="/nurse/configuracion"
-          routerLinkActive="bg-gray-100 text-gray-900 font-semibold"
-          class="menu-item group relative flex items-center gap-2.5 rounded-lg px-4 py-2 font-medium text-gray-600 duration-300 ease-in-out hover:bg-gray-50 hover:text-gray-900"
-          [class.justify-center]="collapsed()"
-          (click)="closeMobile.emit()"
+          class="menu-item group relative flex items-center gap-2.5 rounded-lg px-4 py-2 font-medium duration-300 ease-in-out"
+          [ngClass]="{
+            'menu-item-active': isActive('/nurse/configuracion'),
+            'menu-item-inactive text-gray-600 hover:bg-gray-50': !isActive('/nurse/configuracion'),
+            'lg:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
+            'lg:justify-start': (isExpanded$ | async) || (isHovered$ | async)
+          }"
+          (click)="onSubmenuClick()"
         >
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="h-6 w-6 flex-shrink-0"
+            [ngClass]="{
+              'text-gray-900': isActive('/nurse/configuracion'),
+              'text-gray-500': !isActive('/nurse/configuracion')
+            }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
-          @if (!collapsed()) {
-            <span class="menu-item-text">Configuración</span>
+          @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
+            <span class="menu-item-text">Configuracion</span>
           }
         </a>
       </div>
@@ -157,14 +273,15 @@ interface MenuGroup {
     }
   `]
 })
-export class SidebarComponent {
-  collapsed = input(false);
-  mobileOpen = input(false);
+export class SidebarComponent implements OnInit, OnDestroy {
+  openSubmenu: string | null = null;
+  subMenuHeights: { [key: string]: number } = {};
 
-  toggleCollapse = output<void>();
-  closeMobile = output<void>();
+  readonly isExpanded$;
+  readonly isMobileOpen$;
+  readonly isHovered$;
 
-  openSubmenus = signal<Set<string>>(new Set());
+  private subscription: Subscription = new Subscription();
 
   menuGroups: MenuGroup[] = [
     {
@@ -184,11 +301,16 @@ export class SidebarComponent {
           label: 'Agenda',
           icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
           route: '/nurse/agenda'
+        },
+        {
+          label: 'Servicios',
+          icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>',
+          route: '/nurse/servicios'
         }
       ]
     },
     {
-      title: 'Atención Clínica',
+      title: 'Atencion Clinica',
       items: [
         {
           label: 'CRED',
@@ -201,17 +323,17 @@ export class SidebarComponent {
           route: '/nurse/vacunas'
         },
         {
-          label: 'Historia Clínica',
+          label: 'Historia Clinica',
           icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
           route: '/nurse/historia-clinica'
         }
       ]
     },
     {
-      title: 'Gestión',
+      title: 'Gestion',
       items: [
         {
-          label: 'Facturación',
+          label: 'Facturacion',
           icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
           route: '/nurse/facturacion'
         },
@@ -229,27 +351,101 @@ export class SidebarComponent {
     }
   ];
 
-  sidebarClasses(): string {
-    // TailAdmin: w-[290px] when expanded, w-[90px] when collapsed
-    const width = this.collapsed() ? 'w-[90px]' : 'w-[290px]';
-    // In mobile: translate-x-0 when open, -translate-x-full when closed
-    const mobile = this.mobileOpen() ? 'translate-x-0' : '-translate-x-full';
-    return `${width} ${mobile}`;
+  constructor(
+    public sidebarService: SidebarService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.isExpanded$ = this.sidebarService.isExpanded$;
+    this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+    this.isHovered$ = this.sidebarService.isHovered$;
   }
 
-  toggleSubmenu(label: string): void {
-    this.openSubmenus.update(set => {
-      const newSet = new Set(set);
-      if (newSet.has(label)) {
-        newSet.delete(label);
-      } else {
-        newSet.add(label);
+  ngOnInit(): void {
+    this.subscription.add(
+      this.router.events.subscribe(event => {
+        if (event instanceof NavigationEnd) {
+          this.setActiveMenuFromRoute(this.router.url);
+        }
+      })
+    );
+
+    this.subscription.add(
+      combineLatest([this.isExpanded$, this.isMobileOpen$, this.isHovered$]).subscribe(
+        ([isExpanded, isMobileOpen, isHovered]) => {
+          if (!isExpanded && !isMobileOpen && !isHovered) {
+            this.cdr.detectChanges();
+          }
+        }
+      )
+    );
+
+    this.setActiveMenuFromRoute(this.router.url);
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
+  isActive(path: string): boolean {
+    return this.router.url === path;
+  }
+
+  toggleSubmenu(groupIdx: number, itemIdx: number): void {
+    const key = `submenu-${groupIdx}-${itemIdx}`;
+
+    if (this.openSubmenu === `${groupIdx}-${itemIdx}`) {
+      this.openSubmenu = null;
+      this.subMenuHeights[key] = 0;
+    } else {
+      this.openSubmenu = `${groupIdx}-${itemIdx}`;
+
+      setTimeout(() => {
+        const el = document.getElementById(key);
+        if (el) {
+          this.subMenuHeights[key] = el.scrollHeight;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  onSidebarMouseEnter(): void {
+    this.isExpanded$.subscribe(expanded => {
+      if (!expanded) {
+        this.sidebarService.setHovered(true);
       }
-      return newSet;
+    }).unsubscribe();
+  }
+
+  private setActiveMenuFromRoute(currentUrl: string): void {
+    this.menuGroups.forEach((group, groupIdx) => {
+      group.items.forEach((item, itemIdx) => {
+        if (item.children) {
+          item.children.forEach(child => {
+            if (currentUrl === child.route) {
+              const key = `submenu-${groupIdx}-${itemIdx}`;
+              this.openSubmenu = `${groupIdx}-${itemIdx}`;
+
+              setTimeout(() => {
+                const el = document.getElementById(key);
+                if (el) {
+                  this.subMenuHeights[key] = el.scrollHeight;
+                  this.cdr.detectChanges();
+                }
+              });
+            }
+          });
+        }
+      });
     });
   }
 
-  isSubmenuOpen(label: string): boolean {
-    return this.openSubmenus().has(label);
+  onSubmenuClick(): void {
+    this.isMobileOpen$.subscribe(isMobile => {
+      if (isMobile) {
+        this.sidebarService.setMobileOpen(false);
+      }
+    }).unsubscribe();
   }
 }

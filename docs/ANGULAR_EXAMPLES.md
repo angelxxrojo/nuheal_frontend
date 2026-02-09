@@ -35,6 +35,8 @@ export interface RegisterRequest {
   numero_colegiatura: string;
   especialidad: string;
   nombre_consultorio?: string;
+  sexo?: 'M' | 'F';
+  rne?: string;
 }
 
 export interface AuthResponse {
@@ -69,6 +71,9 @@ export interface Enfermera {
   telefono_consultorio?: string;
   ruc?: string;
   logo?: string;
+  sexo?: 'M' | 'F';
+  rne?: string;
+  imagen_firma_sello?: string;
   plan_actual?: {
     code: string;
     name: string;
@@ -98,6 +103,8 @@ export interface Paciente {
   };
   edad_texto: string;
   es_menor?: boolean;
+  clasificacion_etaria?: 'nino' | 'adolescente' | 'adulto' | 'adulto_mayor';
+  clasificacion_etaria_display?: string;
   sexo: 'M' | 'F';
   sexo_display?: string;
   lugar_nacimiento?: string;
@@ -105,6 +112,9 @@ export interface Paciente {
   distrito?: string;
   provincia?: string;
   departamento?: string;
+  ubigeo_cod?: string;
+  grupo_sanguineo?: string;
+  grupo_sanguineo_display?: string;
   telefono?: string;
   email?: string;
   foto?: string;
@@ -145,6 +155,8 @@ export interface PacienteCreate {
   distrito?: string;
   provincia?: string;
   departamento?: string;
+  ubigeo_cod?: string;
+  grupo_sanguineo?: string;
   telefono?: string;
   email?: string;
   observaciones?: string;
@@ -153,6 +165,10 @@ export interface PacienteCreate {
 
 ```typescript
 // src/app/models/cita.model.ts
+export type TipoAtencion = 'consultorio' | 'domicilio' | 'teleconsulta';
+export type CitaEstado = 'programada' | 'confirmada' | 'en_atencion' | 'atendida' | 'cancelada' | 'no_asistio';
+export type TipoBloqueo = 'TRABAJO_PRINCIPAL' | 'TRABAJO_SECUNDARIO' | 'PERSONAL' | 'VACACIONES';
+
 export interface TipoServicio {
   id: number;
   nombre: string;
@@ -176,6 +192,9 @@ export interface Cita {
   fecha: string;
   hora_inicio: string;
   hora_fin: string;
+  tipo_atencion: TipoAtencion;
+  tipo_atencion_display?: string;
+  plan_tratamiento?: number;
   estado: CitaEstado;
   estado_display?: string;
   notas?: string;
@@ -185,13 +204,12 @@ export interface Cita {
   created_at?: string;
 }
 
-export type CitaEstado = 'programada' | 'confirmada' | 'en_atencion' | 'atendida' | 'cancelada' | 'no_asistio';
-
 export interface CitaCreate {
   paciente: number;
   tipo_servicio: number;
   fecha: string;
   hora_inicio: string;
+  tipo_atencion?: TipoAtencion;
   notas?: string;
 }
 
@@ -205,10 +223,108 @@ export interface DisponibilidadResponse {
   laborable: boolean;
   slots: SlotDisponible[];
 }
+
+export interface BloqueoAgenda {
+  id: number;
+  fecha_inicio: string;
+  fecha_fin: string;
+  hora_inicio?: string;
+  hora_fin?: string;
+  motivo?: string;
+  tipo: TipoBloqueo;
+  tipo_display?: string;
+  titulo?: string;
+  es_recurrente: boolean;
+  color: string;
+  is_active: boolean;
+}
+
+export interface BloqueoAgendaCreate {
+  fecha_inicio: string;
+  fecha_fin: string;
+  hora_inicio?: string;
+  hora_fin?: string;
+  motivo?: string;
+  tipo?: TipoBloqueo;
+  titulo?: string;
+  es_recurrente?: boolean;
+  color?: string;
+}
+
+export interface PatronRecurrencia {
+  id: number;
+  bloqueo: number;
+  tipo_recurrencia: 'diario' | 'semanal' | 'patron';
+  tipo_recurrencia_display?: string;
+  intervalo_dias?: number;
+  dias_semana?: number[];
+  patron_ciclo?: string[];
+  fecha_inicio_recurrencia: string;
+  fecha_fin_recurrencia?: string;
+}
+
+export interface ListaEspera {
+  id: number;
+  paciente: number;
+  paciente_nombre?: string;
+  tipo_servicio: number;
+  servicio_nombre?: string;
+  fecha_deseada: string;
+  tipo_atencion: TipoAtencion;
+  tipo_atencion_display?: string;
+  notas?: string;
+  estado: 'esperando' | 'notificado' | 'agendado' | 'cancelado';
+  estado_display?: string;
+  created_at?: string;
+}
+
+export interface PlanTratamiento {
+  id: number;
+  paciente: number;
+  paciente_nombre?: string;
+  tipo_servicio: number;
+  servicio_nombre?: string;
+  nombre: string;
+  descripcion?: string;
+  total_sesiones: number;
+  sesiones_completadas: number;
+  frecuencia: 'diaria' | 'semanal' | 'quincenal' | 'mensual' | 'personalizada';
+  frecuencia_display?: string;
+  dias_semana?: number[];
+  fecha_inicio: string;
+  fecha_fin_estimada?: string;
+  estado: 'activo' | 'completado' | 'suspendido' | 'cancelado';
+  estado_display?: string;
+  orden_medica?: string;
+  requiere_orden_medica: boolean;
+  notas?: string;
+  progreso: number;
+  sesiones_restantes: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PlanTratamientoCreate {
+  paciente: number;
+  tipo_servicio: number;
+  nombre: string;
+  descripcion?: string;
+  total_sesiones: number;
+  frecuencia: string;
+  dias_semana?: number[];
+  fecha_inicio: string;
+  fecha_fin_estimada?: string;
+  orden_medica?: File;
+  requiere_orden_medica?: boolean;
+  notas?: string;
+}
 ```
 
 ```typescript
 // src/app/models/cred.model.ts
+export type SuplementoHierroEstado = 'no_iniciado' | 'iniciado' | 'continuando' | 'terminado';
+export type SuplementoHierroTipo = 'gotas' | 'jarabe' | 'otro';
+
 export interface ControlCRED {
   id: number;
   paciente: number | Paciente;
@@ -235,6 +351,9 @@ export interface ControlCRED {
   tiene_alerta: boolean;
   tipo_alerta: 'verde' | 'amarillo' | 'rojo';
   alertas_activas?: Alerta[];
+  dosaje_hemoglobina?: string;
+  suplemento_hierro_estado?: SuplementoHierroEstado;
+  suplemento_hierro_tipo?: SuplementoHierroTipo;
   desarrollo_motor?: string;
   desarrollo_lenguaje?: string;
   desarrollo_social?: string;
@@ -258,6 +377,9 @@ export interface ControlCREDCreate {
   talla_cm: number;
   perimetro_cefalico_cm?: number;
   perimetro_toracico_cm?: number;
+  dosaje_hemoglobina?: number;
+  suplemento_hierro_estado?: SuplementoHierroEstado;
+  suplemento_hierro_tipo?: SuplementoHierroTipo;
   desarrollo_motor?: string;
   desarrollo_lenguaje?: string;
   desarrollo_social?: string;
@@ -290,6 +412,274 @@ export interface CurvaReferencia {
   p3: number;
   p50: number;
   p97: number;
+}
+```
+
+```typescript
+// src/app/models/vacuna.model.ts
+export type OrigenInsumo = 'stock_propio' | 'traido_paciente';
+export type EstadoCerteza = 'verificado' | 'declarado' | 'desconocido';
+
+export interface Vacuna {
+  id: number;
+  codigo: string;
+  nombre: string;
+  nombre_comercial?: string;
+  descripcion?: string;
+  enfermedad_previene: string;
+  via_administracion: string;
+  via_administracion_display?: string;
+  dosis_ml: string;
+  sitio_aplicacion?: string;
+  contraindicaciones?: string;
+  efectos_secundarios?: string;
+}
+
+export interface EsquemaDosis {
+  id: number;
+  vacuna?: Vacuna;
+  vacuna_nombre?: string;
+  vacuna_codigo?: string;
+  numero_dosis: number;
+  nombre_dosis: string;
+  edad_meses_minima: number;
+  edad_meses_ideal: number;
+  edad_meses_maxima?: number;
+  es_refuerzo: boolean;
+}
+
+export interface DosisAplicada {
+  id: number;
+  vacuna?: Vacuna;
+  esquema_dosis?: EsquemaDosis;
+  vacuna_nombre_manual?: string;
+  vacuna_laboratorio?: string;
+  nombre_vacuna_display: string;
+  fecha_aplicacion: string;
+  lote?: string;
+  fecha_vencimiento_lote?: string;
+  lote_vacuna?: number;
+  sitio_aplicacion?: string;
+  edad_aplicacion_meses: number;
+  origen_insumo: OrigenInsumo;
+  origen_insumo_display?: string;
+  foto_receta_medica?: string;
+  foto_envase?: string;
+  estado_certeza: EstadoCerteza;
+  estado_certeza_display?: string;
+  observaciones?: string;
+  reacciones_adversas?: string;
+  aplicada_a_tiempo?: boolean | null;
+  created_at?: string;
+}
+
+export interface DosisAplicadaCreate {
+  paciente: number;
+  vacuna?: number;
+  esquema_dosis?: number;
+  vacuna_nombre_manual?: string;
+  vacuna_laboratorio?: string;
+  fecha_aplicacion: string;
+  lote?: string;
+  fecha_vencimiento_lote?: string;
+  lote_vacuna?: number;
+  sitio_aplicacion?: string;
+  origen_insumo?: OrigenInsumo;
+  foto_receta_medica?: File;
+  foto_envase?: File;
+  estado_certeza?: EstadoCerteza;
+  observaciones?: string;
+  reacciones_adversas?: string;
+}
+
+export interface LoteVacuna {
+  id: number;
+  vacuna: number;
+  vacuna_nombre?: string;
+  numero_lote: string;
+  fecha_vencimiento: string;
+  stock_inicial: number;
+  stock_actual: number;
+  proveedor?: string;
+  fecha_adquisicion?: string;
+  observaciones?: string;
+  esta_vencido: boolean;
+  esta_por_vencer: boolean;
+  stock_bajo: boolean;
+  created_at?: string;
+}
+
+export interface LoteVacunaCreate {
+  vacuna: number;
+  numero_lote: string;
+  fecha_vencimiento: string;
+  stock_inicial: number;
+  stock_actual?: number;
+  proveedor?: string;
+  fecha_adquisicion?: string;
+  observaciones?: string;
+}
+
+export interface NoVacunacion {
+  id: number;
+  paciente: number;
+  paciente_nombre?: string;
+  esquema_dosis: number;
+  dosis_nombre?: string;
+  vacuna_nombre?: string;
+  fecha: string;
+  motivo: 'enfermo' | 'rechazo_padres' | 'desabastecimiento' | 'contraindicacion' | 'otro';
+  motivo_display?: string;
+  detalle?: string;
+  created_at?: string;
+}
+
+export interface CarnetVacunacion {
+  paciente: {
+    id: number;
+    nombre: string;
+    fecha_nacimiento: string;
+    edad_meses: number;
+    edad_texto: string;
+  };
+  dosis_aplicadas: DosisAplicada[];
+  dosis_pendientes: EsquemaDosis[];
+  dosis_vencidas: EsquemaDosis[];
+  proximas_dosis: EsquemaDosis[];
+  resumen: {
+    paciente_id: number;
+    total_aplicadas: number;
+    total_pendientes: number;
+    total_vencidas: number;
+    tiene_vacunas_pendientes_urgentes: boolean;
+  };
+}
+
+export interface AlertaLote {
+  lote: LoteVacuna;
+  alertas: ('vencido' | 'por_vencer' | 'stock_bajo')[];
+}
+```
+
+```typescript
+// src/app/models/facturacion.model.ts
+export type EstadoPago = 'pagado' | 'pendiente' | 'adelanto';
+
+export interface Ingreso {
+  id: number;
+  cita?: number;
+  paciente?: number;
+  paciente_nombre?: string;
+  fecha: string;
+  concepto: string;
+  descripcion?: string;
+  monto: string;
+  metodo_pago: string;
+  metodo_pago_display?: string;
+  estado_pago: EstadoPago;
+  estado_pago_display?: string;
+  monto_pendiente: string;
+  numero_recibo?: string;
+  comprobante?: string;
+  created_at?: string;
+}
+
+export interface IngresoCreate {
+  cita?: number;
+  paciente?: number;
+  fecha: string;
+  concepto: string;
+  descripcion?: string;
+  monto: string;
+  metodo_pago: string;
+  estado_pago?: EstadoPago;
+  monto_pendiente?: string;
+  numero_recibo?: string;
+  comprobante?: File;
+}
+
+export interface Gasto {
+  id: number;
+  fecha: string;
+  categoria: string;
+  categoria_display?: string;
+  concepto: string;
+  descripcion?: string;
+  monto: string;
+  proveedor?: string;
+  numero_documento?: string;
+  comprobante?: string;
+  created_at?: string;
+}
+```
+
+```typescript
+// src/app/models/historia-clinica.model.ts
+export interface DiagnosticoNANDA {
+  id: number;
+  codigo: string;
+  dominio: string;
+  clase: string;
+  etiqueta: string;
+  definicion?: string;
+}
+
+export interface DiagnosticoCIE10 {
+  id: number;
+  codigo: string;
+  descripcion: string;
+  capitulo: string;
+  grupo: string;
+}
+
+export interface NotaSOAPIE {
+  id: number;
+  fecha: string;
+  enfermera_nombre?: string;
+  cita?: number;
+  cita_info?: {
+    id: number;
+    fecha: string;
+    servicio: string;
+  };
+  subjetivo: string;
+  objetivo: string;
+  analisis: string;
+  planificacion: string;
+  intervencion: string;
+  evaluacion: string;
+  temperatura?: string;
+  frecuencia_cardiaca?: number;
+  frecuencia_respiratoria?: number;
+  presion_sistolica?: number;
+  presion_diastolica?: number;
+  presion_arterial?: string;
+  saturacion_oxigeno?: number;
+  glucosa_capilar?: string;
+  diagnosticos_nanda?: DiagnosticoNANDA[];
+  diagnosticos_cie10?: DiagnosticoCIE10[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface NotaSOAPIECreate {
+  cita?: number;
+  fecha: string;
+  subjetivo: string;
+  objetivo: string;
+  analisis: string;
+  planificacion: string;
+  intervencion: string;
+  evaluacion: string;
+  temperatura?: number;
+  frecuencia_cardiaca?: number;
+  frecuencia_respiratoria?: number;
+  presion_sistolica?: number;
+  presion_diastolica?: number;
+  saturacion_oxigeno?: number;
+  glucosa_capilar?: number;
+  diagnosticos_nanda_ids?: number[];
+  diagnosticos_cie10_ids?: number[];
 }
 ```
 
@@ -363,6 +753,16 @@ export class AuthService {
   }
 
   updateProfile(data: Partial<any>): Observable<Enfermera> {
+    return this.http.patch<Enfermera>(`${this.apiUrl}/me/`, data).pipe(
+      tap(enfermera => {
+        this.currentUserSubject.next(enfermera);
+        localStorage.setItem('currentUser', JSON.stringify(enfermera));
+      })
+    );
+  }
+
+  /** Upload firma/sello - use FormData for file upload */
+  updateProfileWithFile(data: FormData): Observable<Enfermera> {
     return this.http.patch<Enfermera>(`${this.apiUrl}/me/`, data).pipe(
       tap(enfermera => {
         this.currentUserSubject.next(enfermera);
@@ -560,7 +960,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { TipoServicio, Cita, CitaCreate, DisponibilidadResponse } from '../models/cita.model';
+import {
+  TipoServicio, Cita, CitaCreate, DisponibilidadResponse,
+  BloqueoAgenda, BloqueoAgendaCreate, PatronRecurrencia,
+  ListaEspera, PlanTratamiento, PlanTratamientoCreate
+} from '../models/cita.model';
 import { PaginatedResponse } from '../models/common.model';
 
 @Injectable({
@@ -571,7 +975,7 @@ export class AgendaService {
 
   constructor(private http: HttpClient) {}
 
-  // Configuración
+  // --- Configuracion ---
   getConfiguracion(): Observable<any> {
     return this.http.get(`${this.apiUrl}/configuracion/`);
   }
@@ -580,7 +984,7 @@ export class AgendaService {
     return this.http.patch(`${this.apiUrl}/configuracion/`, data);
   }
 
-  // Tipos de Servicio
+  // --- Tipos de Servicio ---
   getServicios(): Observable<TipoServicio[]> {
     return this.http.get<TipoServicio[]>(`${this.apiUrl}/servicios/`);
   }
@@ -597,7 +1001,7 @@ export class AgendaService {
     return this.http.delete<void>(`${this.apiUrl}/servicios/${id}/`);
   }
 
-  // Citas
+  // --- Citas ---
   getCitas(params?: {
     fecha?: string;
     fecha_inicio?: string;
@@ -606,7 +1010,6 @@ export class AgendaService {
     paciente?: number;
   }): Observable<PaginatedResponse<Cita>> {
     let httpParams = new HttpParams();
-
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -614,7 +1017,6 @@ export class AgendaService {
         }
       });
     }
-
     return this.http.get<PaginatedResponse<Cita>>(`${this.apiUrl}/citas/`, { params: httpParams });
   }
 
@@ -624,10 +1026,6 @@ export class AgendaService {
 
   createCita(data: CitaCreate): Observable<Cita> {
     return this.http.post<Cita>(`${this.apiUrl}/citas/`, data);
-  }
-
-  updateCita(id: number, data: Partial<Cita>): Observable<Cita> {
-    return this.http.patch<Cita>(`${this.apiUrl}/citas/${id}/`, data);
   }
 
   confirmarCita(id: number): Observable<any> {
@@ -646,7 +1044,7 @@ export class AgendaService {
     return this.http.post(`${this.apiUrl}/citas/${id}/no-asistio/`, {});
   }
 
-  // Disponibilidad
+  // --- Disponibilidad ---
   getDisponibilidad(fecha: string, tipoServicio?: number): Observable<DisponibilidadResponse> {
     let params = new HttpParams().set('fecha', fecha);
     if (tipoServicio) {
@@ -655,19 +1053,75 @@ export class AgendaService {
     return this.http.get<DisponibilidadResponse>(`${this.apiUrl}/disponibilidad/`, { params });
   }
 
-  // Vistas rápidas
-  getCitasHoy(): Observable<{
-    fecha: string;
-    total: number;
-    pendientes: number;
-    atendidas: number;
-    citas: Cita[];
-  }> {
+  // --- Vistas rapidas ---
+  getCitasHoy(): Observable<{ fecha: string; total: number; pendientes: number; atendidas: number; citas: Cita[] }> {
     return this.http.get<any>(`${this.apiUrl}/citas-hoy/`);
   }
 
   getProximasCitas(): Observable<Cita[]> {
     return this.http.get<Cita[]>(`${this.apiUrl}/proximas/`);
+  }
+
+  // --- Bloqueos ---
+  getBloqueos(): Observable<BloqueoAgenda[]> {
+    return this.http.get<BloqueoAgenda[]>(`${this.apiUrl}/bloqueos/`);
+  }
+
+  createBloqueo(data: BloqueoAgendaCreate): Observable<BloqueoAgenda> {
+    return this.http.post<BloqueoAgenda>(`${this.apiUrl}/bloqueos/`, data);
+  }
+
+  updateBloqueo(id: number, data: Partial<BloqueoAgendaCreate>): Observable<BloqueoAgenda> {
+    return this.http.patch<BloqueoAgenda>(`${this.apiUrl}/bloqueos/${id}/`, data);
+  }
+
+  deleteBloqueo(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/bloqueos/${id}/`);
+  }
+
+  // --- Patrones de Recurrencia ---
+  getPatrones(): Observable<PatronRecurrencia[]> {
+    return this.http.get<PatronRecurrencia[]>(`${this.apiUrl}/patrones-recurrencia/`);
+  }
+
+  createPatron(data: Partial<PatronRecurrencia>): Observable<PatronRecurrencia> {
+    return this.http.post<PatronRecurrencia>(`${this.apiUrl}/patrones-recurrencia/`, data);
+  }
+
+  // --- Lista de Espera ---
+  getListaEspera(estado?: string): Observable<ListaEspera[]> {
+    let params = new HttpParams();
+    if (estado) params = params.set('estado', estado);
+    return this.http.get<ListaEspera[]>(`${this.apiUrl}/lista-espera/`, { params });
+  }
+
+  createListaEspera(data: { paciente: number; tipo_servicio: number; fecha_deseada: string; tipo_atencion?: string; notas?: string }): Observable<ListaEspera> {
+    return this.http.post<ListaEspera>(`${this.apiUrl}/lista-espera/`, data);
+  }
+
+  updateListaEspera(id: number, data: Partial<ListaEspera>): Observable<ListaEspera> {
+    return this.http.patch<ListaEspera>(`${this.apiUrl}/lista-espera/${id}/`, data);
+  }
+
+  // --- Planes de Tratamiento ---
+  getPlanesTratamiento(params?: { estado?: string; paciente?: number }): Observable<PlanTratamiento[]> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          httpParams = httpParams.set(key, value.toString());
+        }
+      });
+    }
+    return this.http.get<PlanTratamiento[]>(`${this.apiUrl}/planes-tratamiento/`, { params: httpParams });
+  }
+
+  createPlanTratamiento(data: PlanTratamientoCreate | FormData): Observable<PlanTratamiento> {
+    return this.http.post<PlanTratamiento>(`${this.apiUrl}/planes-tratamiento/`, data);
+  }
+
+  completarSesion(planId: number): Observable<PlanTratamiento> {
+    return this.http.post<PlanTratamiento>(`${this.apiUrl}/planes-tratamiento/${planId}/completar_sesion/`, {});
   }
 }
 ```
@@ -697,7 +1151,6 @@ export class CREDService {
     con_alerta?: boolean;
   }): Observable<PaginatedResponse<ControlCRED>> {
     let httpParams = new HttpParams();
-
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -705,7 +1158,6 @@ export class CREDService {
         }
       });
     }
-
     return this.http.get<PaginatedResponse<ControlCRED>>(this.apiUrl + '/', { params: httpParams });
   }
 
@@ -734,11 +1186,7 @@ export class CREDService {
     talla_cm: number;
     edad_meses: number;
     sexo: 'M' | 'F';
-  }): Observable<{
-    input: any;
-    zscores: any;
-    diagnosticos: any;
-  }> {
+  }): Observable<{ input: any; zscores: any; diagnosticos: any }> {
     return this.http.post<any>(`${this.apiUrl}/calculadora/`, data);
   }
 }
@@ -748,69 +1196,14 @@ export class CREDService {
 ```typescript
 // src/app/services/vacunas.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-
-export interface Vacuna {
-  id: number;
-  codigo: string;
-  nombre: string;
-  nombre_comercial?: string;
-  descripcion?: string;
-  enfermedad_previene: string;
-  via_administracion: string;
-  via_administracion_display?: string;
-  dosis_ml: string;
-  sitio_aplicacion?: string;
-}
-
-export interface EsquemaDosis {
-  id: number;
-  vacuna?: Vacuna;
-  vacuna_nombre?: string;
-  vacuna_codigo?: string;
-  numero_dosis: number;
-  nombre_dosis: string;
-  edad_meses_minima: number;
-  edad_meses_ideal: number;
-  edad_meses_maxima?: number;
-  es_refuerzo: boolean;
-}
-
-export interface DosisAplicada {
-  id: number;
-  vacuna: Vacuna;
-  esquema_dosis: EsquemaDosis;
-  fecha_aplicacion: string;
-  lote: string;
-  fecha_vencimiento_lote?: string;
-  sitio_aplicacion?: string;
-  edad_aplicacion_meses: number;
-  observaciones?: string;
-  reacciones_adversas?: string;
-  aplicada_a_tiempo: boolean;
-}
-
-export interface CarnetVacunacion {
-  paciente: {
-    id: number;
-    nombre: string;
-    fecha_nacimiento: string;
-    edad_meses: number;
-    edad_texto: string;
-  };
-  dosis_aplicadas: DosisAplicada[];
-  dosis_pendientes: EsquemaDosis[];
-  dosis_vencidas: EsquemaDosis[];
-  proximas_dosis: EsquemaDosis[];
-  resumen: {
-    total_aplicadas: number;
-    total_pendientes: number;
-    total_vencidas: number;
-    tiene_vacunas_pendientes_urgentes: boolean;
-  };
-}
+import {
+  Vacuna, EsquemaDosis, DosisAplicada, DosisAplicadaCreate,
+  CarnetVacunacion, LoteVacuna, LoteVacunaCreate,
+  NoVacunacion, AlertaLote
+} from '../models/vacuna.model';
 
 @Injectable({
   providedIn: 'root'
@@ -820,6 +1213,7 @@ export class VacunasService {
 
   constructor(private http: HttpClient) {}
 
+  // --- Catalogo ---
   getCatalogo(): Observable<Vacuna[]> {
     return this.http.get<Vacuna[]>(`${this.apiUrl}/catalogo/`);
   }
@@ -828,26 +1222,170 @@ export class VacunasService {
     return this.http.get<any[]>(`${this.apiUrl}/esquema-nacional/`);
   }
 
+  // --- Carnet ---
   getCarnet(pacienteId: number): Observable<CarnetVacunacion> {
     return this.http.get<CarnetVacunacion>(`${this.apiUrl}/carnet/${pacienteId}/`);
   }
 
-  registrarDosis(data: {
-    paciente: number;
-    vacuna: number;
-    esquema_dosis: number;
-    fecha_aplicacion: string;
-    lote: string;
-    fecha_vencimiento_lote?: string;
-    sitio_aplicacion?: string;
-    observaciones?: string;
-    reacciones_adversas?: string;
-  }): Observable<DosisAplicada> {
+  // --- Dosis Aplicadas ---
+  getDosisAplicadas(pacienteId?: number): Observable<DosisAplicada[]> {
+    let params = new HttpParams();
+    if (pacienteId) params = params.set('paciente', pacienteId.toString());
+    return this.http.get<DosisAplicada[]>(`${this.apiUrl}/dosis-aplicadas/`, { params });
+  }
+
+  /**
+   * Registrar dosis aplicada.
+   * Usa FormData si incluye archivos (foto_receta_medica, foto_envase).
+   */
+  registrarDosis(data: DosisAplicadaCreate | FormData): Observable<DosisAplicada> {
     return this.http.post<DosisAplicada>(`${this.apiUrl}/dosis-aplicadas/`, data);
   }
 
   getPacientesPendientes(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/pacientes-pendientes/`);
+  }
+
+  // --- Lotes (Inventario) ---
+  getLotes(vacunaId?: number): Observable<LoteVacuna[]> {
+    let params = new HttpParams();
+    if (vacunaId) params = params.set('vacuna', vacunaId.toString());
+    return this.http.get<LoteVacuna[]>(`${this.apiUrl}/lotes/`, { params });
+  }
+
+  createLote(data: LoteVacunaCreate): Observable<LoteVacuna> {
+    return this.http.post<LoteVacuna>(`${this.apiUrl}/lotes/`, data);
+  }
+
+  updateLote(id: number, data: Partial<LoteVacunaCreate>): Observable<LoteVacuna> {
+    return this.http.patch<LoteVacuna>(`${this.apiUrl}/lotes/${id}/`, data);
+  }
+
+  getAlertasLotes(): Observable<AlertaLote[]> {
+    return this.http.get<AlertaLote[]>(`${this.apiUrl}/lotes/alertas/`);
+  }
+
+  // --- No Vacunacion ---
+  getNoVacunacion(pacienteId?: number): Observable<NoVacunacion[]> {
+    let params = new HttpParams();
+    if (pacienteId) params = params.set('paciente', pacienteId.toString());
+    return this.http.get<NoVacunacion[]>(`${this.apiUrl}/no-vacunacion/`, { params });
+  }
+
+  createNoVacunacion(data: { paciente: number; esquema_dosis: number; fecha: string; motivo: string; detalle?: string }): Observable<NoVacunacion> {
+    return this.http.post<NoVacunacion>(`${this.apiUrl}/no-vacunacion/`, data);
+  }
+}
+```
+
+### Historia Clinica Service
+```typescript
+// src/app/services/historia-clinica.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { DiagnosticoNANDA, DiagnosticoCIE10, NotaSOAPIE, NotaSOAPIECreate } from '../models/historia-clinica.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class HistoriaClinicaService {
+  private apiUrl = `${environment.apiUrl}`;
+
+  constructor(private http: HttpClient) {}
+
+  // --- Historia Clinica ---
+  getHistoria(pacienteId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/pacientes/${pacienteId}/historia/`);
+  }
+
+  createHistoria(pacienteId: number, data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/pacientes/${pacienteId}/historia/`, data);
+  }
+
+  updateHistoria(pacienteId: number, data: any): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/pacientes/${pacienteId}/historia/`, data);
+  }
+
+  // --- Notas SOAPIE ---
+  getNotas(pacienteId: number): Observable<NotaSOAPIE[]> {
+    return this.http.get<NotaSOAPIE[]>(`${this.apiUrl}/pacientes/${pacienteId}/historia/notas/`);
+  }
+
+  getNota(pacienteId: number, notaId: number): Observable<NotaSOAPIE> {
+    return this.http.get<NotaSOAPIE>(`${this.apiUrl}/pacientes/${pacienteId}/historia/notas/${notaId}/`);
+  }
+
+  createNota(pacienteId: number, data: NotaSOAPIECreate): Observable<NotaSOAPIE> {
+    return this.http.post<NotaSOAPIE>(`${this.apiUrl}/pacientes/${pacienteId}/historia/notas/`, data);
+  }
+
+  // --- Catalogos de diagnosticos ---
+  getDiagnosticosNANDA(search?: string): Observable<DiagnosticoNANDA[]> {
+    let params = new HttpParams();
+    if (search) params = params.set('search', search);
+    return this.http.get<DiagnosticoNANDA[]>(`${this.apiUrl}/historia-clinica/diagnosticos-nanda/`, { params });
+  }
+
+  getDiagnosticosCIE10(search?: string): Observable<DiagnosticoCIE10[]> {
+    let params = new HttpParams();
+    if (search) params = params.set('search', search);
+    return this.http.get<DiagnosticoCIE10[]>(`${this.apiUrl}/historia-clinica/diagnosticos-cie10/`, { params });
+  }
+}
+```
+
+### Facturacion Service
+```typescript
+// src/app/services/facturacion.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { Ingreso, IngresoCreate, Gasto } from '../models/facturacion.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FacturacionService {
+  private apiUrl = `${environment.apiUrl}/facturacion`;
+
+  constructor(private http: HttpClient) {}
+
+  // --- Ingresos ---
+  getIngresos(params?: { mes?: number; anio?: number }): Observable<Ingreso[]> {
+    let httpParams = new HttpParams();
+    if (params?.mes) httpParams = httpParams.set('mes', params.mes.toString());
+    if (params?.anio) httpParams = httpParams.set('anio', params.anio.toString());
+    return this.http.get<Ingreso[]>(`${this.apiUrl}/ingresos/`, { params: httpParams });
+  }
+
+  createIngreso(data: IngresoCreate | FormData): Observable<Ingreso> {
+    return this.http.post<Ingreso>(`${this.apiUrl}/ingresos/`, data);
+  }
+
+  // --- Gastos ---
+  getGastos(params?: { mes?: number; anio?: number }): Observable<Gasto[]> {
+    let httpParams = new HttpParams();
+    if (params?.mes) httpParams = httpParams.set('mes', params.mes.toString());
+    if (params?.anio) httpParams = httpParams.set('anio', params.anio.toString());
+    return this.http.get<Gasto[]>(`${this.apiUrl}/gastos/`, { params: httpParams });
+  }
+
+  createGasto(data: Partial<Gasto> | FormData): Observable<Gasto> {
+    return this.http.post<Gasto>(`${this.apiUrl}/gastos/`, data);
+  }
+
+  // --- Resumenes ---
+  getResumenMensual(mes: number, anio: number): Observable<any> {
+    const params = new HttpParams().set('mes', mes.toString()).set('anio', anio.toString());
+    return this.http.get(`${this.apiUrl}/resumen/`, { params });
+  }
+
+  getResumenAnual(anio: number): Observable<any> {
+    const params = new HttpParams().set('anio', anio.toString());
+    return this.http.get(`${this.apiUrl}/resumen-anual/`, { params });
   }
 }
 ```
@@ -892,23 +1430,17 @@ export class ReportesService {
   }
 
   getHIS(mes: number, anio: number): Observable<any> {
-    const params = new HttpParams()
-      .set('mes', mes.toString())
-      .set('anio', anio.toString());
+    const params = new HttpParams().set('mes', mes.toString()).set('anio', anio.toString());
     return this.http.get(`${this.apiUrl}/his/`, { params });
   }
 
   getVacunacion(mes: number, anio: number): Observable<any> {
-    const params = new HttpParams()
-      .set('mes', mes.toString())
-      .set('anio', anio.toString());
+    const params = new HttpParams().set('mes', mes.toString()).set('anio', anio.toString());
     return this.http.get(`${this.apiUrl}/vacunacion/`, { params });
   }
 
   getCRED(mes: number, anio: number): Observable<any> {
-    const params = new HttpParams()
-      .set('mes', mes.toString())
-      .set('anio', anio.toString());
+    const params = new HttpParams().set('mes', mes.toString()).set('anio', anio.toString());
     return this.http.get(`${this.apiUrl}/cred/`, { params });
   }
 }
@@ -916,7 +1448,7 @@ export class ReportesService {
 
 ---
 
-## 4. Modelo común para paginación
+## 4. Modelo comun para paginacion
 ```typescript
 // src/app/models/common.model.ts
 export interface PaginatedResponse<T> {
@@ -986,7 +1518,7 @@ export class FeatureGuard implements CanActivate {
           return true;
         }
 
-        // Redirigir a página de upgrade
+        // Redirigir a pagina de upgrade
         this.router.navigate(['/upgrade'], {
           queryParams: { feature: requiredFeature }
         });
@@ -1001,150 +1533,97 @@ export class FeatureGuard implements CanActivate {
 
 ## 6. Uso en Componentes
 
-### Ejemplo: Dashboard Component
+### Ejemplo: Registrar Dosis con Origen de Insumo
 ```typescript
-// src/app/pages/dashboard/dashboard.component.ts
-import { Component, OnInit } from '@angular/core';
-import { ReportesService, Dashboard } from '../../services/reportes.service';
-import { AgendaService } from '../../services/agenda.service';
-import { Cita } from '../../models/cita.model';
-
-@Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html'
-})
-export class DashboardComponent implements OnInit {
-  dashboard: Dashboard | null = null;
-  citasHoy: Cita[] = [];
-  loading = true;
-  error: string | null = null;
-
-  constructor(
-    private reportesService: ReportesService,
-    private agendaService: AgendaService
-  ) {}
-
-  ngOnInit(): void {
-    this.loadData();
-  }
-
-  loadData(): void {
-    this.loading = true;
-
-    // Cargar dashboard y citas en paralelo
-    this.reportesService.getDashboard().subscribe({
-      next: (data) => {
-        this.dashboard = data;
-      },
-      error: (err) => {
-        this.error = 'Error cargando dashboard';
-        console.error(err);
-      }
-    });
-
-    this.agendaService.getCitasHoy().subscribe({
-      next: (data) => {
-        this.citasHoy = data.citas;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.loading = false;
-        console.error(err);
-      }
-    });
-  }
-}
-```
-
-### Ejemplo: Agendar Cita Component
-```typescript
-// src/app/pages/citas/agendar-cita/agendar-cita.component.ts
+// src/app/pages/vacunas/registrar-dosis/registrar-dosis.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AgendaService } from '../../../services/agenda.service';
-import { PacientesService } from '../../../services/pacientes.service';
-import { TipoServicio, SlotDisponible } from '../../../models/cita.model';
-import { Paciente } from '../../../models/paciente.model';
+import { VacunasService } from '../../../services/vacunas.service';
+import { Vacuna, EsquemaDosis, LoteVacuna, OrigenInsumo } from '../../../models/vacuna.model';
 
 @Component({
-  selector: 'app-agendar-cita',
-  templateUrl: './agendar-cita.component.html'
+  selector: 'app-registrar-dosis',
+  templateUrl: './registrar-dosis.component.html'
 })
-export class AgendarCitaComponent implements OnInit {
+export class RegistrarDosisComponent implements OnInit {
   form: FormGroup;
-  pacientes: Paciente[] = [];
-  servicios: TipoServicio[] = [];
-  slots: SlotDisponible[] = [];
-  loading = false;
-  searchPaciente = '';
+  vacunas: Vacuna[] = [];
+  lotes: LoteVacuna[] = [];
+  origenInsumo: OrigenInsumo = 'stock_propio';
+  esVacunaManual = false;
 
   constructor(
     private fb: FormBuilder,
-    private agendaService: AgendaService,
-    private pacientesService: PacientesService,
-    private router: Router
+    private vacunasService: VacunasService
   ) {
     this.form = this.fb.group({
       paciente: [null, Validators.required],
-      tipo_servicio: [null, Validators.required],
-      fecha: ['', Validators.required],
-      hora_inicio: ['', Validators.required],
-      notas: ['']
+      vacuna: [null],
+      esquema_dosis: [null],
+      vacuna_nombre_manual: [''],
+      vacuna_laboratorio: [''],
+      fecha_aplicacion: ['', Validators.required],
+      origen_insumo: ['stock_propio', Validators.required],
+      lote_vacuna: [null],
+      lote: [''],
+      fecha_vencimiento_lote: [null],
+      sitio_aplicacion: [''],
+      estado_certeza: ['verificado'],
+      observaciones: ['']
     });
   }
 
   ngOnInit(): void {
-    this.loadServicios();
+    this.vacunasService.getCatalogo().subscribe(v => this.vacunas = v);
   }
 
-  loadServicios(): void {
-    this.agendaService.getServicios().subscribe({
-      next: (servicios) => {
-        this.servicios = servicios.filter(s => s.is_active);
+  onOrigenChange(origen: OrigenInsumo): void {
+    this.origenInsumo = origen;
+    if (origen === 'stock_propio') {
+      // Cargar lotes disponibles de la vacuna seleccionada
+      const vacunaId = this.form.get('vacuna')?.value;
+      if (vacunaId) {
+        this.vacunasService.getLotes(vacunaId).subscribe(l => {
+          this.lotes = l.filter(lote => !lote.esta_vencido && lote.stock_actual > 0);
+        });
       }
-    });
-  }
-
-  searchPacientes(): void {
-    if (this.searchPaciente.length >= 2) {
-      this.pacientesService.getAll({ search: this.searchPaciente }).subscribe({
-        next: (response) => {
-          this.pacientes = response.results;
-        }
-      });
     }
   }
 
-  onFechaChange(): void {
-    const fecha = this.form.get('fecha')?.value;
-    const servicioId = this.form.get('tipo_servicio')?.value;
-
-    if (fecha) {
-      this.agendaService.getDisponibilidad(fecha, servicioId).subscribe({
-        next: (response) => {
-          if (response.laborable) {
-            this.slots = response.slots;
-          } else {
-            this.slots = [];
-            alert('Este día no es laborable');
-          }
-        }
-      });
+  toggleVacunaManual(): void {
+    this.esVacunaManual = !this.esVacunaManual;
+    if (this.esVacunaManual) {
+      this.form.patchValue({ vacuna: null, esquema_dosis: null });
+    } else {
+      this.form.patchValue({ vacuna_nombre_manual: '', vacuna_laboratorio: '' });
     }
   }
 
   onSubmit(): void {
     if (this.form.valid) {
-      this.loading = true;
+      const formData = new FormData();
+      const values = this.form.value;
 
-      this.agendaService.createCita(this.form.value).subscribe({
-        next: (cita) => {
-          this.router.navigate(['/citas', cita.id]);
+      // Solo agregar campos con valor
+      Object.entries(values).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          formData.append(key, value as string);
+        }
+      });
+
+      // Agregar fotos si existen
+      const receta = (document.getElementById('foto_receta') as HTMLInputElement)?.files?.[0];
+      const envase = (document.getElementById('foto_envase') as HTMLInputElement)?.files?.[0];
+      if (receta) formData.append('foto_receta_medica', receta);
+      if (envase) formData.append('foto_envase', envase);
+
+      this.vacunasService.registrarDosis(formData).subscribe({
+        next: (dosis) => {
+          console.log('Dosis registrada:', dosis.nombre_vacuna_display);
+          // Navegar al carnet del paciente
         },
         error: (err) => {
-          this.loading = false;
-          alert(err.error?.detail || 'Error al crear la cita');
+          console.error('Error:', err.error);
         }
       });
     }
@@ -1201,7 +1680,7 @@ import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { MatSnackBar } from '@angular/material/snack-bar'; // o tu sistema de notificaciones
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
@@ -1213,19 +1692,17 @@ export class ErrorInterceptor implements HttpInterceptor {
         let errorMessage = 'Error desconocido';
 
         if (error.error instanceof ErrorEvent) {
-          // Error del cliente
           errorMessage = error.error.message;
         } else {
-          // Error del servidor
           switch (error.status) {
             case 400:
               errorMessage = this.parseValidationErrors(error.error);
               break;
             case 401:
-              errorMessage = 'Sesión expirada. Por favor inicie sesión nuevamente.';
+              errorMessage = 'Sesion expirada. Por favor inicie sesion nuevamente.';
               break;
             case 403:
-              errorMessage = error.error?.detail || 'No tiene permisos para esta acción';
+              errorMessage = error.error?.detail || 'No tiene permisos para esta accion';
               break;
             case 404:
               errorMessage = 'Recurso no encontrado';
@@ -1253,7 +1730,7 @@ export class ErrorInterceptor implements HttpInterceptor {
         messages.push(error[key]);
       }
     }
-    return messages.join('. ') || 'Error de validación';
+    return messages.join('. ') || 'Error de validacion';
   }
 }
 ```
@@ -1262,8 +1739,11 @@ export class ErrorInterceptor implements HttpInterceptor {
 
 ## Notas Importantes
 
-1. **Todos los endpoints (excepto login, register y planes) requieren autenticación**
-2. **Las fechas se envían en formato `YYYY-MM-DD`**
-3. **Las horas se envían en formato `HH:MM:SS` o `HH:MM`**
-4. **Los decimales se envían como strings para evitar problemas de precisión**
+1. **Todos los endpoints (excepto login, register y planes) requieren autenticacion**
+2. **Las fechas se envian en formato `YYYY-MM-DD`**
+3. **Las horas se envian en formato `HH:MM:SS` o `HH:MM`**
+4. **Los decimales se envian como strings para evitar problemas de precision**
 5. **El backend siempre retorna los datos del usuario autenticado (multi-tenant por FK)**
+6. **Para endpoints con archivos (fotos, PDFs), usar `FormData` en vez de JSON**
+7. **Los campos `vacuna` y `esquema_dosis` en dosis aplicadas son opcionales - se puede registrar una vacuna manual**
+8. **El campo `origen_insumo` determina si se descuenta stock (stock_propio) o no (traido_paciente)**

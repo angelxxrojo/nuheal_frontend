@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { PaginatedResponse } from '../../../models/common.model';
 import {
@@ -24,7 +24,15 @@ export class DocumentosService {
 
   // Plantillas
   getPlantillas(): Observable<PlantillaConsentimiento[]> {
-    return this.http.get<PlantillaConsentimiento[]>(`${this.apiUrl}/plantillas/`);
+    return this.http.get<any>(`${this.apiUrl}/plantillas/`).pipe(
+      map(response => {
+        // Handle both array and paginated response
+        if (Array.isArray(response)) {
+          return response;
+        }
+        return response.results || [];
+      })
+    );
   }
 
   getPlantilla(id: number): Observable<PlantillaConsentimiento> {

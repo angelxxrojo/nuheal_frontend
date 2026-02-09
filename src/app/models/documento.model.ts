@@ -2,9 +2,11 @@ export interface PlantillaConsentimiento {
   id: number;
   nombre: string;
   codigo: string;
-  contenido_template: string;
+  contenido?: string;
+  contenido_template?: string; // Alias por compatibilidad
   descripcion?: string;
-  activo: boolean;
+  activo?: boolean;
+  is_active?: boolean;
 }
 
 export interface Consentimiento {

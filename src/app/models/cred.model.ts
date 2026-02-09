@@ -2,6 +2,8 @@ import { Paciente } from './paciente.model';
 import { Sexo } from './common.model';
 
 export type TipoAlerta = 'verde' | 'amarillo' | 'rojo';
+export type SuplementoHierroEstado = 'no_iniciado' | 'iniciado' | 'continuando' | 'terminado';
+export type SuplementoHierroTipo = 'gotas' | 'jarabe' | 'otro';
 
 export type DiagnosticoNutricional = 'normal' | 'desnutricion_aguda' | 'desnutricion_cronica' |
   'sobrepeso' | 'obesidad' | 'riesgo_desnutricion' | 'riesgo_sobrepeso' | 'talla_baja' | 'talla_alta';
@@ -38,6 +40,9 @@ export interface ControlCRED {
   tiene_alerta: boolean;
   tipo_alerta: TipoAlerta;
   alertas_activas?: Alerta[];
+  dosaje_hemoglobina?: string;
+  suplemento_hierro_estado?: SuplementoHierroEstado;
+  suplemento_hierro_tipo?: SuplementoHierroTipo;
   desarrollo_motor?: string;
   desarrollo_lenguaje?: string;
   desarrollo_social?: string;
@@ -55,6 +60,9 @@ export interface ControlCREDCreate {
   talla_cm: number;
   perimetro_cefalico_cm?: number;
   perimetro_toracico_cm?: number;
+  dosaje_hemoglobina?: number;
+  suplemento_hierro_estado?: SuplementoHierroEstado;
+  suplemento_hierro_tipo?: SuplementoHierroTipo;
   desarrollo_motor?: string;
   desarrollo_lenguaje?: string;
   desarrollo_social?: string;

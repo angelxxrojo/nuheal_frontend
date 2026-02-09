@@ -9,23 +9,20 @@ import {
   ReporteVacunacion,
   ReporteCRED
 } from '../../services/reportes.service';
+import { PageBreadcrumbComponent } from '../../../../shared/components/page-breadcrumb/page-breadcrumb.component';
 
 type TabType = 'dashboard' | 'produccion' | 'his' | 'vacunacion' | 'cred';
 
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PageBreadcrumbComponent],
   template: `
     <div class="space-y-6">
-      <!-- Header -->
-      <div>
-        <h1 class="text-2xl font-semibold text-gray-900">Reportes</h1>
-        <p class="mt-1 text-sm text-gray-500">Dashboard, producción, HIS, vacunación y CRED</p>
-      </div>
+      <app-page-breadcrumb pageTitle="Reportes" />
 
       <!-- Tabs -->
-      <div class="bg-white rounded-lg shadow">
+      <div class="rounded-2xl border border-gray-200 bg-white">
         <div class="border-b border-gray-200">
           <nav class="-mb-px flex overflow-x-auto" aria-label="Tabs">
             <button

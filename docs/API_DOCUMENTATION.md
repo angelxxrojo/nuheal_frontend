@@ -51,7 +51,9 @@ POST /api/auth/register/
   "telefono": "987654321",
   "numero_colegiatura": "CEP12345",
   "especialidad": "pediatrica",
-  "nombre_consultorio": "Consultorio Pediátrico San Miguel"
+  "nombre_consultorio": "Consultorio Pediátrico San Miguel",
+  "sexo": "F",
+  "rne": "RNE-12345"
 }
 ```
 
@@ -62,6 +64,10 @@ POST /api/auth/register/
 - `geriatrica` - Enfermería Geriátrica
 - `uci` - Cuidados Intensivos
 - `otra` - Otra
+
+**Sexo (de la enfermera, para formato HIS MINSA):**
+- `M` - Masculino
+- `F` - Femenino
 
 **Response (201):**
 ```json
@@ -79,7 +85,7 @@ POST /api/auth/register/
 }
 ```
 
-> **Nota:** Al registrarse, automáticamente se asigna el plan **Freemium**.
+> **Nota:** Al registrarse, automáticamente se asigna el plan **Freemium**. Los campos `sexo` y `rne` son opcionales en el registro.
 
 ---
 
@@ -116,6 +122,8 @@ POST /api/auth/login/
     "numero_colegiatura": "CEP12345",
     "especialidad": "pediatrica",
     "nombre_consultorio": "Consultorio Pediátrico San Miguel",
+    "sexo": "F",
+    "rne": "RNE-12345",
     "plan_actual": {
       "code": "freemium",
       "name": "Freemium"
@@ -177,6 +185,9 @@ Authorization: Bearer <token>
   "telefono_consultorio": "014567890",
   "ruc": "10123456789",
   "logo": null,
+  "sexo": "F",
+  "rne": "RNE-12345",
+  "imagen_firma_sello": null,
   "plan_actual": {
     "code": "freemium",
     "name": "Freemium"
@@ -201,9 +212,14 @@ Authorization: Bearer <token>
   "telefono": "999888777",
   "nombre_consultorio": "Centro de Enfermería Pediátrica",
   "direccion_consultorio": "Av. Javier Prado 456, San Isidro",
-  "ruc": "10123456789"
+  "ruc": "10123456789",
+  "sexo": "F",
+  "rne": "RNE-12345",
+  "imagen_firma_sello": "<archivo_imagen>"
 }
 ```
+
+> **Nota:** `imagen_firma_sello` es una imagen (PNG/JPG) de la firma y sello de la enfermera. Se usa en documentos PDF generados por el sistema. Enviar como `multipart/form-data`.
 
 ---
 
@@ -531,6 +547,8 @@ Authorization: Bearer <token>
   "distrito": "Lince",
   "provincia": "Lima",
   "departamento": "Lima",
+  "ubigeo_cod": "150101",
+  "grupo_sanguineo": "O+",
   "telefono": "987654321",
   "email": "padres@email.com",
   "observaciones": "Paciente referido por pediatra"
@@ -542,6 +560,9 @@ Authorization: Bearer <token>
 - `ce` - Carnet de Extranjería
 - `pasaporte` - Pasaporte
 - `otro` - Otro
+
+**Grupos sanguíneos:**
+- `A+`, `A-`, `B+`, `B-`, `AB+`, `AB-`, `O+`, `O-`, `ND` (No determinado, default)
 
 **Response (201):**
 ```json
@@ -563,14 +584,25 @@ Authorization: Bearer <token>
   },
   "edad_texto": "1 año, 7 meses",
   "es_menor": true,
+  "clasificacion_etaria": "nino",
+  "clasificacion_etaria_display": "Niño (0-11 años)",
   "sexo": "M",
   "sexo_display": "Masculino",
+  "ubigeo_cod": "150101",
+  "grupo_sanguineo": "O+",
+  "grupo_sanguineo_display": "O+",
   "responsables": [],
   "responsable_principal": null,
   "is_active": true,
   "created_at": "2024-01-20T14:30:00Z"
 }
 ```
+
+> **Clasificaciones etarias (calculada automáticamente):**
+> - `nino` - Niño (0-11 años)
+> - `adolescente` - Adolescente (12-17 años)
+> - `adulto` - Adulto (18-59 años)
+> - `adulto_mayor` - Adulto Mayor (60+ años)
 
 ---
 
@@ -592,7 +624,9 @@ Authorization: Bearer <token>
 ```json
 {
   "telefono": "999888777",
-  "direccion": "Nueva dirección 456"
+  "direccion": "Nueva dirección 456",
+  "ubigeo_cod": "150102",
+  "grupo_sanguineo": "A+"
 }
 ```
 
@@ -742,29 +776,6 @@ Authorization: Bearer <token>
     "instrucciones_previas": "Traer carnet de vacunación y DNI del niño",
     "orden": 1,
     "is_active": true
-  },
-  {
-    "id": 2,
-    "nombre": "Vacunación",
-    "descripcion": "Aplicación de vacunas del esquema nacional",
-    "duracion_minutos": 15,
-    "precio": "30.00",
-    "color": "#3B82F6",
-    "requiere_consentimiento": true,
-    "instrucciones_previas": "Traer carnet de vacunación",
-    "orden": 2,
-    "is_active": true
-  },
-  {
-    "id": 3,
-    "nombre": "Curación",
-    "descripcion": "Curación de heridas",
-    "duracion_minutos": 30,
-    "precio": "40.00",
-    "color": "#EF4444",
-    "requiere_consentimiento": true,
-    "orden": 3,
-    "is_active": true
   }
 ]
 ```
@@ -805,12 +816,6 @@ Authorization: Bearer <token>
 - `estado` - programada, confirmada, atendida, cancelada, no_asistio
 - `paciente` - ID del paciente
 
-**Ejemplo:**
-```http
-GET /api/agenda/citas/?fecha=2024-01-25
-GET /api/agenda/citas/?fecha_inicio=2024-01-01&fecha_fin=2024-01-31&estado=atendida
-```
-
 **Response (200):**
 ```json
 {
@@ -826,23 +831,11 @@ GET /api/agenda/citas/?fecha_inicio=2024-01-01&fecha_fin=2024-01-31&estado=atend
       "fecha": "2024-01-25",
       "hora_inicio": "09:00:00",
       "hora_fin": "09:45:00",
+      "tipo_atencion": "consultorio",
+      "tipo_atencion_display": "Consultorio",
       "estado": "programada",
       "estado_display": "Programada",
       "recordatorio_enviado": false
-    },
-    {
-      "id": 2,
-      "paciente": 2,
-      "paciente_nombre": "Rodríguez Sánchez, María",
-      "tipo_servicio": 2,
-      "servicio_nombre": "Vacunación",
-      "servicio_color": "#3B82F6",
-      "fecha": "2024-01-25",
-      "hora_inicio": "10:00:00",
-      "hora_fin": "10:15:00",
-      "estado": "confirmada",
-      "estado_display": "Confirmada",
-      "recordatorio_enviado": true
     }
   ]
 }
@@ -863,9 +856,15 @@ Authorization: Bearer <token>
   "tipo_servicio": 1,
   "fecha": "2024-01-25",
   "hora_inicio": "09:00:00",
+  "tipo_atencion": "consultorio",
   "notas": "Control de los 18 meses"
 }
 ```
+
+**Tipos de atención:**
+- `consultorio` - Consultorio (default)
+- `domicilio` - Domicilio
+- `teleconsulta` - Teleconsulta
 
 > La `hora_fin` se calcula automáticamente según la duración del servicio.
 
@@ -887,6 +886,9 @@ Authorization: Bearer <token>
   "fecha": "2024-01-25",
   "hora_inicio": "09:00:00",
   "hora_fin": "09:45:00",
+  "tipo_atencion": "consultorio",
+  "tipo_atencion_display": "Consultorio",
+  "plan_tratamiento": null,
   "estado": "programada",
   "notas": "Control de los 18 meses"
 }
@@ -942,13 +944,8 @@ Authorization: Bearer <token>
   "slots": [
     {"hora": "08:00", "disponible": true},
     {"hora": "08:15", "disponible": true},
-    {"hora": "08:30", "disponible": true},
-    {"hora": "08:45", "disponible": true},
     {"hora": "09:00", "disponible": false},
-    {"hora": "09:15", "disponible": false},
-    {"hora": "09:30", "disponible": false},
-    {"hora": "09:45", "disponible": true},
-    {"hora": "10:00", "disponible": false}
+    {"hora": "09:45", "disponible": true}
   ]
 }
 ```
@@ -987,6 +984,249 @@ Authorization: Bearer <token>
 GET /api/agenda/proximas/
 Authorization: Bearer <token>
 ```
+
+---
+
+### 4.7 Bloqueos de Agenda
+
+#### Listar bloqueos
+```http
+GET /api/agenda/bloqueos/
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "fecha_inicio": "2024-02-01",
+    "fecha_fin": "2024-02-01",
+    "hora_inicio": "14:00:00",
+    "hora_fin": "18:00:00",
+    "motivo": "Guardia en Rebagliati",
+    "tipo": "TRABAJO_PRINCIPAL",
+    "tipo_display": "Trabajo Principal",
+    "titulo": "Guardia Rebagliati",
+    "es_recurrente": true,
+    "color": "#EF4444",
+    "is_active": true
+  }
+]
+```
+
+#### Crear bloqueo
+```http
+POST /api/agenda/bloqueos/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "fecha_inicio": "2024-02-01",
+  "fecha_fin": "2024-02-01",
+  "hora_inicio": "14:00:00",
+  "hora_fin": "18:00:00",
+  "motivo": "Guardia en Rebagliati",
+  "tipo": "TRABAJO_PRINCIPAL",
+  "titulo": "Guardia Rebagliati",
+  "es_recurrente": true,
+  "color": "#EF4444"
+}
+```
+
+**Tipos de bloqueo:**
+- `TRABAJO_PRINCIPAL` - Trabajo Principal
+- `TRABAJO_SECUNDARIO` - Trabajo Secundario
+- `PERSONAL` - Personal (default)
+- `VACACIONES` - Vacaciones
+
+---
+
+### 4.8 Patrones de Recurrencia
+
+Los patrones de recurrencia se vinculan a un bloqueo de agenda para generar bloqueos repetitivos.
+
+#### Listar patrones
+```http
+GET /api/agenda/patrones-recurrencia/
+Authorization: Bearer <token>
+```
+
+#### Crear patrón
+```http
+POST /api/agenda/patrones-recurrencia/
+Authorization: Bearer <token>
+```
+
+**Request (semanal):**
+```json
+{
+  "bloqueo": 1,
+  "tipo_recurrencia": "semanal",
+  "dias_semana": [1, 3, 5],
+  "fecha_inicio_recurrencia": "2024-02-01",
+  "fecha_fin_recurrencia": "2024-06-30"
+}
+```
+
+**Request (patrón cíclico - ej: Día-Noche-Descanso-Descanso):**
+```json
+{
+  "bloqueo": 1,
+  "tipo_recurrencia": "patron",
+  "patron_ciclo": ["DIURNA", "NOCTURNA", "DESCANSO", "DESCANSO"],
+  "fecha_inicio_recurrencia": "2024-02-01",
+  "fecha_fin_recurrencia": null
+}
+```
+
+**Tipos de recurrencia:**
+- `diario` - Cada N días (`intervalo_dias` requerido)
+- `semanal` - Días específicos de la semana (`dias_semana` requerido, ej: [1,3,5] = Lun,Mie,Vie)
+- `patron` - Patrón cíclico (`patron_ciclo` requerido)
+
+---
+
+### 4.9 Lista de Espera
+
+#### Listar
+```http
+GET /api/agenda/lista-espera/
+Authorization: Bearer <token>
+```
+
+**Query params:**
+- `estado` - esperando, notificado, agendado, cancelado
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "paciente": 1,
+    "paciente_nombre": "García López, Juan Carlos",
+    "tipo_servicio": 1,
+    "servicio_nombre": "Vacunación",
+    "fecha_deseada": "2024-02-15",
+    "tipo_atencion": "consultorio",
+    "tipo_atencion_display": "Consultorio",
+    "notas": "Esperando stock de vacuna SPR",
+    "estado": "esperando",
+    "estado_display": "Esperando",
+    "created_at": "2024-01-25T10:00:00Z"
+  }
+]
+```
+
+#### Crear entrada
+```http
+POST /api/agenda/lista-espera/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "paciente": 1,
+  "tipo_servicio": 1,
+  "fecha_deseada": "2024-02-15",
+  "tipo_atencion": "consultorio",
+  "notas": "Esperando stock de vacuna SPR"
+}
+```
+
+**Estados de lista de espera:**
+- `esperando` - Esperando (default)
+- `notificado` - Notificado
+- `agendado` - Agendado
+- `cancelado` - Cancelado
+
+---
+
+### 4.10 Planes de Tratamiento
+
+Planes para tratamientos recurrentes (ej: 5 sesiones de inyectables, curaciones diarias).
+
+#### Listar
+```http
+GET /api/agenda/planes-tratamiento/
+Authorization: Bearer <token>
+```
+
+**Query params:**
+- `estado` - activo, completado, suspendido, cancelado
+- `paciente` - ID del paciente
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "paciente": 1,
+    "paciente_nombre": "García López, Juan Carlos",
+    "tipo_servicio": 5,
+    "servicio_nombre": "Inyectable",
+    "nombre": "Tratamiento de 5 inyectables - Penicilina",
+    "descripcion": "Tratamiento prescrito por Dr. Rodríguez",
+    "total_sesiones": 5,
+    "sesiones_completadas": 2,
+    "frecuencia": "diaria",
+    "frecuencia_display": "Diaria",
+    "dias_semana": null,
+    "fecha_inicio": "2024-01-20",
+    "fecha_fin_estimada": "2024-01-25",
+    "estado": "activo",
+    "estado_display": "Activo",
+    "orden_medica": "/media/ordenes_medicas/orden_123.pdf",
+    "requiere_orden_medica": true,
+    "notas": "",
+    "progreso": 40.0,
+    "sesiones_restantes": 3,
+    "created_at": "2024-01-20T08:00:00Z",
+    "updated_at": "2024-01-22T10:00:00Z"
+  }
+]
+```
+
+#### Crear plan
+```http
+POST /api/agenda/planes-tratamiento/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "paciente": 1,
+  "tipo_servicio": 5,
+  "nombre": "Tratamiento de 5 inyectables - Penicilina",
+  "descripcion": "Tratamiento prescrito por Dr. Rodríguez",
+  "total_sesiones": 5,
+  "frecuencia": "diaria",
+  "fecha_inicio": "2024-01-20",
+  "fecha_fin_estimada": "2024-01-25",
+  "orden_medica": "<archivo_pdf>",
+  "requiere_orden_medica": true,
+  "notas": ""
+}
+```
+
+**Frecuencias:**
+- `diaria` - Diaria
+- `semanal` - Semanal
+- `quincenal` - Quincenal
+- `mensual` - Mensual
+- `personalizada` - Personalizada (usar `dias_semana`)
+
+#### Completar sesión
+```http
+POST /api/agenda/planes-tratamiento/1/completar_sesion/
+Authorization: Bearer <token>
+```
+
+> Incrementa `sesiones_completadas` en 1. Si se completan todas, el estado cambia automáticamente a `completado`.
 
 ---
 
@@ -1067,26 +1307,138 @@ Authorization: Bearer <token>
 {
   "cita": 1,
   "fecha": "2024-01-25T10:30:00Z",
-  "subjetivo": "Madre refiere que el niño come bien, duerme normal. No presenta fiebre ni otros síntomas.",
-  "objetivo": "Paciente activo, reactivo. Piel y mucosas hidratadas. No presenta signos de alarma.",
-  "analisis": "Niño sano en control de crecimiento y desarrollo adecuado para su edad.",
-  "planificacion": "Continuar con lactancia materna. Iniciar alimentación complementaria según indicaciones.",
-  "intervencion": "Se realiza control de peso y talla. Se brinda consejería nutricional a la madre.",
-  "evaluacion": "Madre comprende indicaciones. Se programa próximo control.",
+  "subjetivo": "Madre refiere que el niño come bien, duerme normal.",
+  "objetivo": "Paciente activo, reactivo. Piel y mucosas hidratadas.",
+  "analisis": "Niño sano en control de crecimiento y desarrollo adecuado.",
+  "planificacion": "Continuar con lactancia materna.",
+  "intervencion": "Se realiza control de peso y talla.",
+  "evaluacion": "Madre comprende indicaciones.",
   "temperatura": 36.5,
   "frecuencia_cardiaca": 100,
   "frecuencia_respiratoria": 28,
-  "saturacion_oxigeno": 98
+  "presion_sistolica": 90,
+  "presion_diastolica": 60,
+  "saturacion_oxigeno": 98,
+  "glucosa_capilar": 85.0,
+  "diagnosticos_nanda_ids": [1, 5],
+  "diagnosticos_cie10_ids": [12, 34]
+}
+```
+
+> **Nuevos campos:**
+> - `glucosa_capilar` - Glucosa capilar HGT (decimal, opcional)
+> - `diagnosticos_nanda_ids` - Array de IDs de diagnósticos NANDA (opcional)
+> - `diagnosticos_cie10_ids` - Array de IDs de diagnósticos CIE-10 (opcional)
+
+---
+
+### 5.4 Detalle de Nota SOAPIE
+```http
+GET /api/pacientes/1/historia/notas/1/
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "fecha": "2024-01-25T10:30:00Z",
+  "enfermera_nombre": "María García López",
+  "cita": 1,
+  "cita_info": {
+    "id": 1,
+    "fecha": "2024-01-25",
+    "servicio": "Control CRED"
+  },
+  "subjetivo": "Madre refiere que el niño come bien...",
+  "objetivo": "Paciente activo, reactivo...",
+  "analisis": "Niño sano...",
+  "planificacion": "Continuar con lactancia materna.",
+  "intervencion": "Se realiza control de peso y talla.",
+  "evaluacion": "Madre comprende indicaciones.",
+  "temperatura": "36.5",
+  "frecuencia_cardiaca": 100,
+  "frecuencia_respiratoria": 28,
+  "presion_sistolica": 90,
+  "presion_diastolica": 60,
+  "presion_arterial": "90/60",
+  "saturacion_oxigeno": 98,
+  "glucosa_capilar": "85.0",
+  "diagnosticos_nanda": [
+    {
+      "id": 1,
+      "codigo": "00002",
+      "dominio": "2",
+      "clase": "1",
+      "etiqueta": "Desequilibrio nutricional: inferior a las necesidades corporales",
+      "definicion": "..."
+    }
+  ],
+  "diagnosticos_cie10": [
+    {
+      "id": 12,
+      "codigo": "Z001",
+      "descripcion": "Control de salud de rutina del niño",
+      "capitulo": "XXI",
+      "grupo": "Z00-Z13"
+    }
+  ],
+  "created_at": "2024-01-25T10:30:00Z",
+  "updated_at": "2024-01-25T10:30:00Z"
 }
 ```
 
 ---
 
-### 5.4 Listar Notas SOAPIE
+### 5.5 Listar Notas SOAPIE
 ```http
 GET /api/pacientes/1/historia/notas/
 Authorization: Bearer <token>
 ```
+
+---
+
+### 5.6 Catálogo de Diagnósticos CIE-10
+```http
+GET /api/historia-clinica/diagnosticos-cie10/
+Authorization: Bearer <token>
+```
+
+**Query params:**
+- `search` - Buscar por código o descripción
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "codigo": "Z001",
+    "descripcion": "Control de salud de rutina del niño",
+    "capitulo": "XXI",
+    "grupo": "Z00-Z13"
+  },
+  {
+    "id": 2,
+    "codigo": "Z234",
+    "descripcion": "Supervisión de embarazo normal",
+    "capitulo": "XXI",
+    "grupo": "Z20-Z29"
+  }
+]
+```
+
+> Endpoint de solo lectura (ReadOnly). Los diagnósticos CIE-10 se cargan como datos semilla.
+
+---
+
+### 5.7 Catálogo de Diagnósticos NANDA
+```http
+GET /api/historia-clinica/diagnosticos-nanda/
+Authorization: Bearer <token>
+```
+
+**Query params:**
+- `search` - Buscar por código, etiqueta o dominio
 
 ---
 
@@ -1107,6 +1459,9 @@ Authorization: Bearer <token>
   "peso_kg": 10.500,
   "talla_cm": 78.5,
   "perimetro_cefalico_cm": 46.0,
+  "dosaje_hemoglobina": 11.5,
+  "suplemento_hierro_estado": "continuando",
+  "suplemento_hierro_tipo": "gotas",
   "desarrollo_motor": "Camina solo, sube escaleras con ayuda",
   "desarrollo_lenguaje": "Dice 10 palabras aproximadamente",
   "desarrollo_social": "Interactúa con otros niños, imita actividades",
@@ -1114,6 +1469,18 @@ Authorization: Bearer <token>
   "observaciones": "Buen estado general"
 }
 ```
+
+**Campos nuevos:**
+- `dosaje_hemoglobina` - Hemoglobina en g/dL (decimal, opcional). Valor normal: >11.0
+- `suplemento_hierro_estado` - Estado de suplementación:
+  - `no_iniciado` - No iniciado (default)
+  - `iniciado` - Iniciado
+  - `continuando` - Continuando
+  - `terminado` - Terminado
+- `suplemento_hierro_tipo` - Tipo de suplemento (opcional):
+  - `gotas` - Gotas
+  - `jarabe` - Jarabe
+  - `otro` - Otro
 
 **Response (201):**
 ```json
@@ -1141,7 +1508,10 @@ Authorization: Bearer <token>
   "tiene_alerta": false,
   "tipo_alerta": "verde",
   "alertas_activas": [],
-  "recomendaciones": "Continuar con controles CRED según calendario.\nContinuar con alimentación complementaria adecuada."
+  "dosaje_hemoglobina": "11.5",
+  "suplemento_hierro_estado": "continuando",
+  "suplemento_hierro_tipo": "gotas",
+  "recomendaciones": "Continuar con controles CRED según calendario."
 }
 ```
 
@@ -1155,6 +1525,8 @@ GET /api/cred/?paciente=1
 Authorization: Bearer <token>
 ```
 
+> El listado incluye `dosaje_hemoglobina` y `suplemento_hierro_estado` para vista rápida.
+
 ---
 
 ### 6.3 Gráfico de Crecimiento
@@ -1163,76 +1535,12 @@ GET /api/cred/paciente/1/grafico/
 Authorization: Bearer <token>
 ```
 
-**Response (200):**
-```json
-{
-  "paciente_id": 1,
-  "paciente_nombre": "García López, Juan Carlos",
-  "paciente_sexo": "M",
-  "controles": [
-    {
-      "fecha": "2023-06-15",
-      "edad_meses": 0,
-      "peso_kg": "3.200",
-      "talla_cm": "50.5",
-      "zscore_peso_edad": "0.10",
-      "zscore_talla_edad": "0.05"
-    },
-    {
-      "fecha": "2023-08-15",
-      "edad_meses": 2,
-      "peso_kg": "5.100",
-      "talla_cm": "57.0",
-      "zscore_peso_edad": "-0.20",
-      "zscore_talla_edad": "-0.10"
-    },
-    {
-      "fecha": "2024-01-25",
-      "edad_meses": 19,
-      "peso_kg": "10.500",
-      "talla_cm": "78.5",
-      "zscore_peso_edad": "0.25",
-      "zscore_talla_edad": "-0.15"
-    }
-  ],
-  "curvas_referencia": {
-    "peso_edad": [
-      {"edad_meses": 0, "p3": 2.5, "p50": 3.35, "p97": 4.3},
-      {"edad_meses": 6, "p3": 6.0, "p50": 7.93, "p97": 10.0},
-      {"edad_meses": 12, "p3": 7.5, "p50": 9.65, "p97": 12.0}
-    ],
-    "talla_edad": [
-      {"edad_meses": 0, "p3": 46.1, "p50": 49.9, "p97": 53.7},
-      {"edad_meses": 6, "p3": 63.3, "p50": 67.6, "p97": 72.0},
-      {"edad_meses": 12, "p3": 71.0, "p50": 75.7, "p97": 80.5}
-    ]
-  }
-}
-```
-
 ---
 
 ### 6.4 Alertas Nutricionales
 ```http
 GET /api/cred/alertas/
 Authorization: Bearer <token>
-```
-
-**Response (200):**
-```json
-[
-  {
-    "id": 5,
-    "paciente": 3,
-    "paciente_nombre": "Pérez Silva, Ana",
-    "fecha": "2024-01-20",
-    "edad_meses": 8,
-    "peso_kg": "6.200",
-    "talla_cm": "65.0",
-    "tiene_alerta": true,
-    "tipo_alerta": "amarillo"
-  }
-]
 ```
 
 ---
@@ -1250,34 +1558,6 @@ Authorization: Bearer <token>
   "talla_cm": 78.5,
   "edad_meses": 19,
   "sexo": "M"
-}
-```
-
-**Response (200):**
-```json
-{
-  "input": {
-    "peso_kg": 10.5,
-    "talla_cm": 78.5,
-    "edad_meses": 19,
-    "sexo": "M",
-    "imc": 17.03
-  },
-  "zscores": {
-    "zscore_peso_edad": 0.25,
-    "zscore_talla_edad": -0.15,
-    "zscore_imc_edad": 0.45,
-    "zscore_peso_talla": null,
-    "zscore_pc_edad": null
-  },
-  "diagnosticos": {
-    "diagnostico_peso_edad": "normal",
-    "diagnostico_peso_edad_display": "Normal",
-    "diagnostico_talla_edad": "normal",
-    "diagnostico_talla_edad_display": "Normal",
-    "tiene_alerta": false,
-    "tipo_alerta": "verde"
-  }
 }
 ```
 
@@ -1305,15 +1585,6 @@ Authorization: Bearer <token>
     "via_administracion_display": "Intradérmica",
     "dosis_ml": "0.10",
     "sitio_aplicacion": "Región deltoidea del brazo derecho"
-  },
-  {
-    "id": 3,
-    "codigo": "PENTA",
-    "nombre": "Pentavalente",
-    "descripcion": "Vacuna combinada pentavalente",
-    "enfermedad_previene": "Difteria, Tétanos, Tos ferina, Hepatitis B, Haemophilus influenzae tipo b",
-    "via_administracion": "IM",
-    "dosis_ml": "0.50"
   }
 ]
 ```
@@ -1344,39 +1615,6 @@ Authorization: Bearer <token>
         "edad_meses_ideal": 0,
         "edad_meses_maxima": null,
         "es_refuerzo": false
-      }
-    ]
-  },
-  {
-    "vacuna": {
-      "id": 3,
-      "codigo": "PENTA",
-      "nombre": "Pentavalente"
-    },
-    "dosis": [
-      {
-        "id": 3,
-        "numero_dosis": 1,
-        "nombre_dosis": "1ra dosis",
-        "edad_meses_minima": 2,
-        "edad_meses_ideal": 2,
-        "edad_meses_maxima": 12
-      },
-      {
-        "id": 4,
-        "numero_dosis": 2,
-        "nombre_dosis": "2da dosis",
-        "edad_meses_minima": 4,
-        "edad_meses_ideal": 4,
-        "edad_meses_maxima": 12
-      },
-      {
-        "id": 5,
-        "numero_dosis": 3,
-        "nombre_dosis": "3ra dosis",
-        "edad_meses_minima": 6,
-        "edad_meses_ideal": 6,
-        "edad_meses_maxima": 12
       }
     ]
   }
@@ -1411,19 +1649,28 @@ Authorization: Bearer <token>
       },
       "esquema_dosis": {
         "id": 1,
+        "vacuna_nombre": "BCG",
+        "vacuna_codigo": "BCG",
         "nombre_dosis": "Dosis única"
       },
+      "vacuna_nombre_manual": "",
+      "vacuna_laboratorio": "",
+      "nombre_vacuna_display": "BCG",
       "fecha_aplicacion": "2022-06-16",
       "lote": "BCG2022A",
       "sitio_aplicacion": "Brazo derecho",
       "edad_aplicacion_meses": 0,
+      "origen_insumo": "stock_propio",
+      "origen_insumo_display": "Stock propio",
+      "estado_certeza": "verificado",
+      "estado_certeza_display": "Verificado (Carnet)",
       "aplicada_a_tiempo": true
     }
   ],
   "dosis_pendientes": [
     {
       "id": 14,
-      "vacuna_nombre": "SPR (Sarampión, Paperas, Rubéola)",
+      "vacuna_nombre": "SPR",
       "vacuna_codigo": "SPR",
       "numero_dosis": 2,
       "nombre_dosis": "2da dosis (Refuerzo)",
@@ -1432,14 +1679,7 @@ Authorization: Bearer <token>
     }
   ],
   "dosis_vencidas": [],
-  "proximas_dosis": [
-    {
-      "id": 14,
-      "vacuna_nombre": "SPR",
-      "nombre_dosis": "2da dosis (Refuerzo)",
-      "edad_meses_ideal": 18
-    }
-  ],
+  "proximas_dosis": [],
   "resumen": {
     "paciente_id": 1,
     "total_aplicadas": 12,
@@ -1458,19 +1698,84 @@ POST /api/vacunas/dosis-aplicadas/
 Authorization: Bearer <token>
 ```
 
-**Request:**
+El sistema soporta 3 escenarios para registrar una dosis:
+
+#### Escenario 1: Vacuna del catálogo + esquema nacional (Stock propio)
 ```json
 {
   "paciente": 1,
   "vacuna": 7,
   "esquema_dosis": 14,
   "fecha_aplicacion": "2024-01-25",
-  "lote": "SPR2024A",
-  "fecha_vencimiento_lote": "2025-06-30",
   "sitio_aplicacion": "Brazo izquierdo",
+  "origen_insumo": "stock_propio",
+  "lote_vacuna": 3,
+  "estado_certeza": "verificado",
   "observaciones": "Sin reacciones inmediatas"
 }
 ```
+
+#### Escenario 2: Vacuna del catálogo (Traída por paciente)
+```json
+{
+  "paciente": 1,
+  "vacuna": 7,
+  "esquema_dosis": 14,
+  "fecha_aplicacion": "2024-01-25",
+  "sitio_aplicacion": "Brazo izquierdo",
+  "origen_insumo": "traido_paciente",
+  "lote": "SPR2024A",
+  "fecha_vencimiento_lote": "2025-06-30",
+  "foto_receta_medica": "<archivo_imagen>",
+  "foto_envase": "<archivo_imagen>",
+  "estado_certeza": "verificado",
+  "observaciones": "Vacuna comprada en Inkafarma"
+}
+```
+
+#### Escenario 3: Vacuna fuera del catálogo (manual)
+```json
+{
+  "paciente": 1,
+  "vacuna_nombre_manual": "Vacuna contra Fiebre Amarilla (Viajero)",
+  "vacuna_laboratorio": "Sanofi Pasteur",
+  "fecha_aplicacion": "2024-01-25",
+  "sitio_aplicacion": "Brazo izquierdo",
+  "origen_insumo": "traido_paciente",
+  "lote": "FA2024X",
+  "fecha_vencimiento_lote": "2025-12-31",
+  "foto_receta_medica": "<archivo_imagen>",
+  "estado_certeza": "verificado",
+  "observaciones": "Vacuna no está en el esquema nacional"
+}
+```
+
+**Campos:**
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `paciente` | int | Si | ID del paciente |
+| `vacuna` | int | No* | ID de vacuna del catálogo |
+| `esquema_dosis` | int | No | ID de dosis del esquema nacional |
+| `vacuna_nombre_manual` | string | No* | Nombre manual si no está en catálogo |
+| `vacuna_laboratorio` | string | No | Fabricante de la vacuna |
+| `fecha_aplicacion` | date | Si | Fecha de aplicación |
+| `lote` | string | Cond. | Nro. de lote (obligatorio si traído por paciente) |
+| `fecha_vencimiento_lote` | date | Cond. | Vencimiento (obligatorio si traído por paciente) |
+| `lote_vacuna` | int | Cond. | ID del lote del inventario (obligatorio si stock propio) |
+| `sitio_aplicacion` | string | No | Sitio de aplicación |
+| `origen_insumo` | string | No | `stock_propio` (default) o `traido_paciente` |
+| `foto_receta_medica` | imagen | No | Foto de la receta médica (RF-031) |
+| `foto_envase` | imagen | No | Foto del envase sellado (RF-031) |
+| `estado_certeza` | string | No | `verificado` (default), `declarado`, `desconocido` |
+| `observaciones` | string | No | Observaciones |
+| `reacciones_adversas` | string | No | Reacciones adversas observadas |
+
+> *Debe tener `vacuna` O `vacuna_nombre_manual`. Al menos uno es requerido.
+
+**Validaciones:**
+- Si `origen_insumo = stock_propio`: Requiere `lote_vacuna` con stock > 0 y no vencido. Se descuenta 1 del stock automáticamente.
+- Si `origen_insumo = traido_paciente`: Requiere `lote` y `fecha_vencimiento_lote` para trazabilidad. NO se toca el inventario.
+- Si tiene `vacuna` y `esquema_dosis`: Verifica que coincidan y que no esté ya aplicada.
 
 ---
 
@@ -1509,6 +1814,147 @@ Authorization: Bearer <token>
 
 ---
 
+### 7.6 Lotes de Vacunas (Inventario)
+
+Gestión de stock de vacunas por lote para enfermeras con consultorio formalizado.
+
+#### Listar lotes
+```http
+GET /api/vacunas/lotes/
+Authorization: Bearer <token>
+```
+
+**Query params:**
+- `vacuna` - Filtrar por ID de vacuna
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "vacuna": 7,
+    "vacuna_nombre": "SPR",
+    "numero_lote": "SPR2024A",
+    "fecha_vencimiento": "2025-06-30",
+    "stock_inicial": 10,
+    "stock_actual": 7,
+    "proveedor": "Laboratorio GSK",
+    "fecha_adquisicion": "2024-01-15",
+    "observaciones": "",
+    "esta_vencido": false,
+    "esta_por_vencer": false,
+    "stock_bajo": false,
+    "created_at": "2024-01-15T08:00:00Z"
+  }
+]
+```
+
+#### Crear lote
+```http
+POST /api/vacunas/lotes/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "vacuna": 7,
+  "numero_lote": "SPR2024A",
+  "fecha_vencimiento": "2025-06-30",
+  "stock_inicial": 10,
+  "stock_actual": 10,
+  "proveedor": "Laboratorio GSK",
+  "fecha_adquisicion": "2024-01-15",
+  "observaciones": ""
+}
+```
+
+> Si no se envía `stock_actual`, se usa el valor de `stock_inicial`.
+
+#### Alertas de inventario
+```http
+GET /api/vacunas/lotes/alertas/
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+[
+  {
+    "lote": {
+      "id": 2,
+      "vacuna_nombre": "Pentavalente",
+      "numero_lote": "PENTA2023Z",
+      "stock_actual": 1,
+      "fecha_vencimiento": "2024-02-15"
+    },
+    "alertas": ["por_vencer", "stock_bajo"]
+  }
+]
+```
+
+> Alertas posibles: `vencido`, `por_vencer` (30 días), `stock_bajo` (<=2 unidades).
+
+---
+
+### 7.7 Registro de No Vacunación
+
+Registra motivos por los que una dosis no fue aplicada.
+
+#### Listar
+```http
+GET /api/vacunas/no-vacunacion/
+Authorization: Bearer <token>
+```
+
+**Query params:**
+- `paciente` - Filtrar por ID de paciente
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "paciente": 3,
+    "paciente_nombre": "Pérez Silva, Ana",
+    "esquema_dosis": 8,
+    "dosis_nombre": "2da dosis",
+    "vacuna_nombre": "Rotavirus",
+    "fecha": "2024-01-20",
+    "motivo": "enfermo",
+    "motivo_display": "Niño enfermo",
+    "detalle": "Paciente presentaba fiebre de 38.5",
+    "created_at": "2024-01-20T10:00:00Z"
+  }
+]
+```
+
+#### Crear registro
+```http
+POST /api/vacunas/no-vacunacion/
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "paciente": 3,
+  "esquema_dosis": 8,
+  "fecha": "2024-01-20",
+  "motivo": "enfermo",
+  "detalle": "Paciente presentaba fiebre de 38.5"
+}
+```
+
+**Motivos de no vacunación:**
+- `enfermo` - Niño enfermo
+- `rechazo_padres` - Padres rechazaron
+- `desabastecimiento` - Desabastecimiento
+- `contraindicacion` - Contraindicación médica
+- `otro` - Otro
+
+---
+
 ## 8. DOCUMENTOS
 
 ### 8.1 Plantillas de Consentimiento
@@ -1532,7 +1978,7 @@ Authorization: Bearer <token>
   "cita": 2,
   "plantilla_id": 1,
   "tipo_procedimiento": "Aplicación de vacuna SPR",
-  "contenido": "Yo, Ana María López Rodríguez, identificada con DNI 87654321, en mi calidad de madre del menor Juan Carlos García López, autorizo la aplicación de la vacuna SPR...",
+  "contenido": "Yo, Ana María López Rodríguez, identificada con DNI 87654321...",
   "responsable_nombre": "Ana María López Rodríguez",
   "responsable_dni": "87654321",
   "responsable_parentesco": "Madre"
@@ -1567,6 +2013,8 @@ Authorization: Bearer <token>
   "descripcion": "Control de crecimiento y desarrollo - 18 meses",
   "monto": "50.00",
   "metodo_pago": "efectivo",
+  "estado_pago": "pagado",
+  "monto_pendiente": "0.00",
   "numero_recibo": "001-0001"
 }
 ```
@@ -1578,6 +2026,35 @@ Authorization: Bearer <token>
 - `plin` - Plin
 - `tarjeta` - Tarjeta
 - `otro` - Otro
+
+**Estados de pago:**
+- `pagado` - Pagado (default)
+- `pendiente` - Pendiente (Fiado)
+- `adelanto` - Adelanto
+
+> Si `estado_pago = adelanto`, usar `monto_pendiente` para registrar cuánto falta pagar.
+
+**Response (201):**
+```json
+{
+  "id": 1,
+  "cita": 1,
+  "paciente": 1,
+  "paciente_nombre": "García López, Juan Carlos",
+  "fecha": "2024-01-25",
+  "concepto": "Control CRED",
+  "descripcion": "Control de crecimiento y desarrollo - 18 meses",
+  "monto": "50.00",
+  "metodo_pago": "efectivo",
+  "metodo_pago_display": "Efectivo",
+  "estado_pago": "pagado",
+  "estado_pago_display": "Pagado",
+  "monto_pendiente": "0.00",
+  "numero_recibo": "001-0001",
+  "comprobante": null,
+  "created_at": "2024-01-25T10:30:00Z"
+}
+```
 
 ---
 
@@ -1686,34 +2163,6 @@ GET /api/reportes/produccion/?fecha_inicio=2024-01-01&fecha_fin=2024-01-31
 Authorization: Bearer <token>
 ```
 
-**Response (200):**
-```json
-{
-  "periodo": {
-    "fecha_inicio": "2024-01-01",
-    "fecha_fin": "2024-01-31"
-  },
-  "total_atenciones": 120,
-  "por_servicio": [
-    {"tipo_servicio__nombre": "Control CRED", "total": 45},
-    {"tipo_servicio__nombre": "Vacunación", "total": 35},
-    {"tipo_servicio__nombre": "Curación", "total": 25},
-    {"tipo_servicio__nombre": "Estimulación Temprana", "total": 15}
-  ],
-  "por_sexo": {
-    "M": 58,
-    "F": 62
-  },
-  "por_edad": {
-    "0-11_meses": 25,
-    "1-4a": 50,
-    "2-5_anios": 30,
-    "5-18_anios": 10,
-    "adultos": 5
-  }
-}
-```
-
 ---
 
 ### 10.3 Reporte HIS (MINSA)
@@ -1723,33 +2172,6 @@ Authorization: Bearer <token>
 ```
 
 > **Requiere feature:** `reports_his` (Plan Pro)
-
-**Response (200):**
-```json
-{
-  "establecimiento": "Consultorio Pediátrico San Miguel",
-  "profesional": "María García López",
-  "cep": "CEP12345",
-  "periodo": "01/2024",
-  "resumen": {
-    "total_atenciones": 120,
-    "controles_cred": 45,
-    "vacunas_aplicadas": 85
-  },
-  "registros": [
-    {
-      "fecha": "15/01/2024",
-      "historia_clinica": "HC2024-00001",
-      "dni": "12345678",
-      "apellidos_nombres": "García López, Juan Carlos",
-      "sexo": "M",
-      "edad": "1 año, 7 meses",
-      "diagnostico": "Control CRED",
-      "tipo": "C"
-    }
-  ]
-}
-```
 
 ---
 
@@ -1810,7 +2232,7 @@ Authorization: Bearer <token>
 ### 1. Flujo de Autenticación
 ```
 1. Usuario ingresa email/password
-2. POST /api/auth/login/ → Guardar tokens
+2. POST /api/auth/login/ -> Guardar tokens
 3. Guardar access_token en localStorage o sessionStorage
 4. Agregar interceptor HTTP para incluir Authorization header
 5. Si 401, intentar refresh con POST /api/auth/refresh/
@@ -1819,7 +2241,7 @@ Authorization: Bearer <token>
 
 ### 2. Flujo de Registro
 ```
-1. Usuario llena formulario de registro
+1. Usuario llena formulario de registro (incluye sexo y rne opcionales)
 2. POST /api/auth/register/
 3. Guardar tokens y redirigir a dashboard
 4. Usuario inicia con plan Freemium automáticamente
@@ -1829,17 +2251,18 @@ Authorization: Bearer <token>
 ```
 1. Seleccionar paciente (GET /api/pacientes/)
 2. Seleccionar servicio (GET /api/agenda/servicios/)
-3. Seleccionar fecha
-4. Consultar disponibilidad (GET /api/agenda/disponibilidad/?fecha=X&tipo_servicio=Y)
-5. Seleccionar hora disponible
-6. Crear cita (POST /api/agenda/citas/)
+3. Seleccionar tipo de atención (consultorio/domicilio/teleconsulta)
+4. Seleccionar fecha
+5. Consultar disponibilidad (GET /api/agenda/disponibilidad/?fecha=X&tipo_servicio=Y)
+6. Seleccionar hora disponible
+7. Crear cita (POST /api/agenda/citas/)
 ```
 
 ### 4. Flujo de Control CRED
 ```
 1. Buscar paciente
-2. Ingresar mediciones (peso, talla)
-3. POST /api/cred/ → Z-scores y diagnósticos calculados automáticamente
+2. Ingresar mediciones (peso, talla, hemoglobina, estado hierro)
+3. POST /api/cred/ -> Z-scores y diagnósticos calculados automáticamente
 4. Mostrar alertas si hay
 5. Ver gráfico de crecimiento (GET /api/cred/paciente/{id}/grafico/)
 ```
@@ -1849,7 +2272,20 @@ Authorization: Bearer <token>
 1. Buscar paciente
 2. Ver carnet (GET /api/vacunas/carnet/{paciente_id}/)
 3. Ver dosis pendientes/vencidas
-4. Registrar dosis (POST /api/vacunas/dosis-aplicadas/)
+4. Seleccionar origen del insumo (stock propio / traído por paciente)
+5a. Si stock propio: seleccionar lote del inventario (GET /api/vacunas/lotes/?vacuna=X)
+5b. Si traído por paciente: ingresar lote y vencimiento manualmente
+6. Registrar dosis (POST /api/vacunas/dosis-aplicadas/)
+7. Si es vacuna fuera del catálogo, usar vacuna_nombre_manual en vez de vacuna
+```
+
+### 6. Flujo de Tratamiento Recurrente
+```
+1. Crear plan de tratamiento (POST /api/agenda/planes-tratamiento/)
+2. El sistema sugiere fechas según la frecuencia
+3. Crear citas vinculadas al plan (POST /api/agenda/citas/ con plan_tratamiento)
+4. Al atender cada cita, completar sesión (POST /api/agenda/planes-tratamiento/{id}/completar_sesion/)
+5. El plan se completa automáticamente al terminar todas las sesiones
 ```
 
 ---
@@ -1883,6 +2319,9 @@ interface Enfermera {
   numero_colegiatura: string;
   especialidad: string;
   nombre_consultorio?: string;
+  sexo?: 'M' | 'F';
+  rne?: string;
+  imagen_firma_sello?: string;
   plan_actual?: {
     code: string;
     name: string;
@@ -1897,6 +2336,11 @@ interface Paciente {
   fecha_nacimiento: string;
   edad_texto: string;
   sexo: 'M' | 'F';
+  clasificacion_etaria?: 'nino' | 'adolescente' | 'adulto' | 'adulto_mayor';
+  clasificacion_etaria_display?: string;
+  ubigeo_cod?: string;
+  grupo_sanguineo?: string;
+  grupo_sanguineo_display?: string;
   telefono?: string;
 }
 
@@ -1910,6 +2354,9 @@ interface Cita {
   fecha: string;
   hora_inicio: string;
   hora_fin: string;
+  tipo_atencion: 'consultorio' | 'domicilio' | 'teleconsulta';
+  tipo_atencion_display?: string;
+  plan_tratamiento?: number;
   estado: 'programada' | 'confirmada' | 'en_atencion' | 'atendida' | 'cancelada' | 'no_asistio';
 }
 
@@ -1920,12 +2367,126 @@ interface ControlCRED {
   edad_meses: number;
   peso_kg: string;
   talla_cm: string;
+  dosaje_hemoglobina?: string;
+  suplemento_hierro_estado?: string;
+  suplemento_hierro_tipo?: string;
   zscore_peso_edad?: string;
   zscore_talla_edad?: string;
   diagnostico_peso_edad?: string;
   diagnostico_talla_edad?: string;
   tiene_alerta: boolean;
   tipo_alerta: 'verde' | 'amarillo' | 'rojo';
+}
+
+type OrigenInsumo = 'stock_propio' | 'traido_paciente';
+type EstadoCerteza = 'verificado' | 'declarado' | 'desconocido';
+
+interface DosisAplicada {
+  id: number;
+  vacuna?: Vacuna;
+  esquema_dosis?: EsquemaDosis;
+  vacuna_nombre_manual?: string;
+  vacuna_laboratorio?: string;
+  nombre_vacuna_display: string;
+  fecha_aplicacion: string;
+  lote?: string;
+  fecha_vencimiento_lote?: string;
+  lote_vacuna?: number;
+  sitio_aplicacion?: string;
+  edad_aplicacion_meses: number;
+  origen_insumo: OrigenInsumo;
+  origen_insumo_display: string;
+  foto_receta_medica?: string;
+  foto_envase?: string;
+  estado_certeza: EstadoCerteza;
+  estado_certeza_display: string;
+  aplicada_a_tiempo?: boolean;
+  observaciones?: string;
+  reacciones_adversas?: string;
+}
+
+interface LoteVacuna {
+  id: number;
+  vacuna: number;
+  vacuna_nombre: string;
+  numero_lote: string;
+  fecha_vencimiento: string;
+  stock_inicial: number;
+  stock_actual: number;
+  proveedor?: string;
+  fecha_adquisicion?: string;
+  esta_vencido: boolean;
+  esta_por_vencer: boolean;
+  stock_bajo: boolean;
+}
+
+interface NoVacunacion {
+  id: number;
+  paciente: number;
+  paciente_nombre: string;
+  esquema_dosis: number;
+  dosis_nombre: string;
+  vacuna_nombre: string;
+  fecha: string;
+  motivo: 'enfermo' | 'rechazo_padres' | 'desabastecimiento' | 'contraindicacion' | 'otro';
+  motivo_display: string;
+  detalle?: string;
+}
+
+interface Ingreso {
+  id: number;
+  cita?: number;
+  paciente?: number;
+  paciente_nombre?: string;
+  fecha: string;
+  concepto: string;
+  monto: string;
+  metodo_pago: string;
+  metodo_pago_display: string;
+  estado_pago: 'pagado' | 'pendiente' | 'adelanto';
+  estado_pago_display: string;
+  monto_pendiente: string;
+}
+
+interface BloqueoAgenda {
+  id: number;
+  fecha_inicio: string;
+  fecha_fin: string;
+  hora_inicio?: string;
+  hora_fin?: string;
+  motivo?: string;
+  tipo: 'TRABAJO_PRINCIPAL' | 'TRABAJO_SECUNDARIO' | 'PERSONAL' | 'VACACIONES';
+  tipo_display: string;
+  titulo?: string;
+  es_recurrente: boolean;
+  color: string;
+}
+
+interface PlanTratamiento {
+  id: number;
+  paciente: number;
+  paciente_nombre: string;
+  tipo_servicio: number;
+  servicio_nombre: string;
+  nombre: string;
+  total_sesiones: number;
+  sesiones_completadas: number;
+  frecuencia: 'diaria' | 'semanal' | 'quincenal' | 'mensual' | 'personalizada';
+  estado: 'activo' | 'completado' | 'suspendido' | 'cancelado';
+  progreso: number;
+  sesiones_restantes: number;
+}
+
+interface ListaEspera {
+  id: number;
+  paciente: number;
+  paciente_nombre: string;
+  tipo_servicio: number;
+  servicio_nombre: string;
+  fecha_deseada: string;
+  tipo_atencion: string;
+  notas?: string;
+  estado: 'esperando' | 'notificado' | 'agendado' | 'cancelado';
 }
 
 interface Plan {

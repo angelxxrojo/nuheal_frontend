@@ -81,7 +81,7 @@ export class AuthService {
     );
   }
 
-  updateProfile(data: UpdateProfileRequest): Observable<Enfermera> {
+  updateProfile(data: UpdateProfileRequest | FormData): Observable<Enfermera> {
     return this.http.patch<Enfermera>(`${this.apiUrl}/me/`, data).pipe(
       tap(enfermera => {
         this.currentUserSubject.next(enfermera);
@@ -129,5 +129,10 @@ export class AuthService {
   get isAdmin(): boolean {
     const user = this.currentUserValue;
     return user?.usuario?.is_admin ?? false;
+  }
+
+  get userRole(): string {
+    const user = this.currentUserValue;
+    return user?.sexo === 'M' ? 'Enfermero' : 'Enfermera';
   }
 }

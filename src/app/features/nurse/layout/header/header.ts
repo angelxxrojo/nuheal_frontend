@@ -1,7 +1,8 @@
-import { Component, inject, output, input, HostListener } from '@angular/core';
+import { Component, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SidebarService } from '../../../../core/services/sidebar.service';
 
 @Component({
   selector: 'app-header',
@@ -14,12 +15,12 @@ import { AuthService } from '../../../../core/services/auth.service';
         <div class="flex items-center gap-2 sm:gap-4">
           <!-- Hamburger Toggle BTN (Desktop) -->
           <button
-            (click)="toggleSidebar.emit()"
+            (click)="sidebarService.toggleExpanded()"
             class="z-50 hidden h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:flex"
           >
             <svg
-              class="h-4 w-4 fill-current"
-              [class.rotate-180]="sidebarCollapsed()"
+              class="h-4 w-4 fill-current transition-transform duration-200"
+              [class.rotate-180]="!(sidebarService.isExpanded$ | async)"
               viewBox="0 0 16 12"
               fill="none"
             >
@@ -33,7 +34,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
           <!-- Hamburger Toggle BTN (Mobile) -->
           <button
-            (click)="toggleMobileSidebar.emit()"
+            (click)="sidebarService.toggleMobileOpen()"
             class="z-50 flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
           >
             <svg class="h-6 w-6 fill-current" viewBox="0 0 24 24" fill="none">
@@ -146,10 +147,10 @@ import { AuthService } from '../../../../core/services/auth.service';
               </span>
               <span class="hidden text-left lg:block">
                 <span class="block text-sm font-medium text-gray-800">{{ userName }}</span>
-                <span class="block text-xs text-gray-500">Enfermera</span>
+                <span class="block text-xs text-gray-500">{{ userRole }}</span>
               </span>
               <svg
-                class="hidden h-4 w-4 text-gray-500 lg:block"
+                class="hidden h-4 w-4 text-gray-500 transition-transform duration-200 lg:block"
                 [class.rotate-180]="dropdownOpen"
                 fill="none"
                 stroke="currentColor"
@@ -190,7 +191,7 @@ import { AuthService } from '../../../../core/services/auth.service';
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                       </svg>
-                      Configuración
+                      Configuracion
                     </a>
                   </li>
                 </ul>
@@ -203,7 +204,7 @@ import { AuthService } from '../../../../core/services/auth.service';
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                     </svg>
-                    Cerrar sesión
+                    Cerrar sesion
                   </button>
                 </div>
               </div>
@@ -217,10 +218,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class HeaderComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
-
-  sidebarCollapsed = input(false);
-  toggleMobileSidebar = output<void>();
-  toggleSidebar = output<void>();
+  sidebarService = inject(SidebarService);
 
   dropdownOpen = false;
   notificationsOpen = false;
@@ -260,6 +258,10 @@ export class HeaderComponent {
       return `${user.usuario.first_name.charAt(0)}${user.usuario.last_name.charAt(0)}`.toUpperCase();
     }
     return 'U';
+  }
+
+  get userRole(): string {
+    return this.authService.userRole;
   }
 
   toggleDropdown(): void {

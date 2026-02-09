@@ -4,42 +4,23 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { ActivatedRoute } from '@angular/router';
 import { CREDService } from '../../services/cred.service';
 import { PacientesService } from '../../services/pacientes.service';
-import { ControlCRED, ControlCREDCreate, GraficoCRED, TipoAlerta, CalculadoraOMSResponse } from '../../../../models/cred.model';
+import { ControlCRED, ControlCREDCreate, GraficoCRED, TipoAlerta, CalculadoraOMSResponse, SuplementoHierroEstado } from '../../../../models/cred.model';
 import { Paciente } from '../../../../models/paciente.model';
 import { Sexo } from '../../../../models/common.model';
 import { debounceTime, Subject } from 'rxjs';
+import { PageBreadcrumbComponent } from '../../../../shared/components/page-breadcrumb/page-breadcrumb.component';
 
 @Component({
   selector: 'app-cred',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PageBreadcrumbComponent],
   template: `
     <div class="space-y-6">
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-semibold text-gray-900">Control CRED</h1>
-          <p class="mt-1 text-sm text-gray-500">Control de Crecimiento y Desarrollo</p>
-        </div>
-        <div class="flex gap-2">
-          <button (click)="openCalculatorModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-            </svg>
-            Calculadora OMS
-          </button>
-          <button (click)="openControlModal()" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Nuevo Control
-          </button>
-        </div>
-      </div>
+      <app-page-breadcrumb pageTitle="Control CRED" />
 
       <!-- Alertas -->
       @if (alertas().length > 0) {
-        <div class="bg-white rounded-lg shadow border border-gray-200 p-5 bg-red-50 border-red-200">
+        <div class="rounded-2xl border border-red-200 bg-red-50 p-5">
           <div class="flex items-center gap-3 mb-3">
             <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
@@ -69,8 +50,8 @@ import { debounceTime, Subject } from 'rxjs';
         </div>
       }
 
-      <!-- Filters -->
-      <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
+      <!-- Filters and Actions -->
+      <div class="rounded-2xl border border-gray-200 bg-white p-5">
         <div class="flex flex-col sm:flex-row gap-4">
           <div class="flex-1 relative">
             <input
@@ -78,7 +59,7 @@ import { debounceTime, Subject } from 'rxjs';
               [(ngModel)]="pacienteSearch"
               (ngModelChange)="onPacienteSearchForFilter($event)"
               placeholder="Filtrar por paciente..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 w-full"
+              class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"
             >
             @if (filterPacienteResults().length > 0) {
               <div class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -104,12 +85,24 @@ import { debounceTime, Subject } from 'rxjs';
               </button>
             </div>
           }
-          <div class="flex gap-2">
-            <select [(ngModel)]="filterAlerta" (ngModelChange)="loadControles()" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
+          <div class="flex gap-3">
+            <select [(ngModel)]="filterAlerta" (ngModelChange)="loadControles()" class="h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden">
               <option value="">Todas las alertas</option>
               <option value="true">Con alerta</option>
               <option value="false">Sin alerta</option>
             </select>
+            <button (click)="openCalculatorModal()" class="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+              Calculadora OMS
+            </button>
+            <button (click)="openControlModal()" class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Nuevo Control
+            </button>
           </div>
         </div>
       </div>
@@ -124,14 +117,14 @@ import { debounceTime, Subject } from 'rxjs';
       <!-- Controls List -->
       @if (!loading()) {
         @if (controles().length === 0) {
-          <div class="bg-white rounded-lg shadow border border-gray-200 p-5">
+          <div class="rounded-2xl border border-gray-200 bg-white p-5">
             <div class="text-center py-8">
               <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
               <p class="mt-2 text-sm font-medium text-gray-900">No hay controles registrados</p>
               <p class="mt-1 text-sm text-gray-500">Registra el primer control CRED</p>
-              <button (click)="openControlModal()" class="btn btn-primary mt-4">
+              <button (click)="openControlModal()" class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition-colors mt-4">
                 Nuevo Control
               </button>
             </div>
@@ -139,7 +132,7 @@ import { debounceTime, Subject } from 'rxjs';
         } @else {
           <div class="space-y-4">
             @for (control of controles(); track control.id) {
-              <div class="bg-white rounded-lg shadow border border-gray-200 cursor-pointer hover:shadow-md transition-shadow" (click)="viewControlDetail(control)">
+              <div class="rounded-2xl border border-gray-200 bg-white cursor-pointer hover:shadow-md transition-shadow" (click)="viewControlDetail(control)">
                 <div class="p-5">
                   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div class="flex items-start gap-4">
@@ -199,20 +192,20 @@ import { debounceTime, Subject } from 'rxjs';
               <p class="text-sm text-gray-500">
                 Mostrando {{ controles().length }} de {{ totalCount() }} controles
               </p>
-              <div class="flex gap-2">
+              <div class="flex items-center gap-2">
                 <button
                   (click)="goToPage(currentPage() - 1)"
                   [disabled]="currentPage() === 1"
-                  class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">
+                  class="rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                   Anterior
                 </button>
-                <span class="px-3 py-1 text-sm text-gray-700">
+                <span class="px-3 py-2 text-sm text-gray-700">
                   Página {{ currentPage() }} de {{ totalPages() }}
                 </span>
                 <button
                   (click)="goToPage(currentPage() + 1)"
                   [disabled]="currentPage() === totalPages()"
-                  class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">
+                  class="rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                   Siguiente
                 </button>
               </div>
@@ -224,17 +217,21 @@ import { debounceTime, Subject } from 'rxjs';
 
     <!-- New Control Modal -->
     @if (showControlModal()) {
-      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideIn">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">
-              {{ editingControl() ? 'Editar Control' : 'Nuevo Control CRED' }}
-            </h2>
-          </div>
-          <form [formGroup]="controlForm" (ngSubmit)="saveControl()" class="p-6 space-y-4">
+      <div class="fixed inset-0 flex items-center justify-center overflow-y-auto z-99999">
+        <div class="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]" (click)="closeControlModal()"></div>
+        <div class="relative w-full max-w-[700px] max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 lg:p-10 m-5 sm:m-0">
+          <button (click)="closeControlModal()" class="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 sm:right-6 sm:top-6 sm:h-11 sm:w-11">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z" fill="currentColor"/>
+            </svg>
+          </button>
+          <h4 class="mb-6 font-semibold text-gray-800 text-xl">
+            {{ editingControl() ? 'Editar Control' : 'Nuevo Control CRED' }}
+          </h4>
+          <form [formGroup]="controlForm" (ngSubmit)="saveControl()" class="space-y-5">
             <!-- Paciente Search -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Paciente *</label>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700">Paciente *</label>
               @if (!selectedPaciente()) {
                 <div class="relative">
                   <input
@@ -242,32 +239,60 @@ import { debounceTime, Subject } from 'rxjs';
                     [(ngModel)]="modalPacienteSearch"
                     [ngModelOptions]="{standalone: true}"
                     (ngModelChange)="onModalPacienteSearch($event)"
-                    placeholder="Buscar paciente..."
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                    (focus)="showModalPacienteDropdown.set(true)"
+                    placeholder="Buscar paciente por nombre o documento..."
+                    class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"
                   >
-                  @if (modalPacienteResults().length > 0) {
-                    <div class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  @if (searchingModalPacientes()) {
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
+                    </div>
+                  }
+                  @if (modalPacienteResults().length > 0 && showModalPacienteDropdown()) {
+                    <div class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       @for (p of modalPacienteResults(); track p.id) {
                         <button
                           type="button"
                           (click)="selectModalPaciente(p)"
-                          class="w-full px-4 py-2 text-left hover:bg-gray-50"
+                          class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
                         >
-                          <p class="font-medium">{{ p.nombre_completo }}</p>
-                          <p class="text-sm text-gray-500">{{ p.edad_texto }} • {{ p.sexo === 'M' ? 'Masculino' : 'Femenino' }}</p>
+                          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700">
+                            {{ getInitials(p.nombre_completo) }}
+                          </div>
+                          <div class="min-w-0 flex-1">
+                            <p class="font-medium text-gray-900 truncate">{{ p.nombre_completo }}</p>
+                            <p class="text-sm text-gray-500 truncate">{{ p.edad_texto }}</p>
+                          </div>
                         </button>
                       }
                     </div>
                   }
+                  @if (modalPacienteSearch.length >= 2 && modalPacienteResults().length === 0 && !searchingModalPacientes() && showModalPacienteDropdown()) {
+                    <div class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center">
+                      <p class="text-sm text-gray-500">No se encontraron pacientes</p>
+                    </div>
+                  }
                 </div>
+                @if (modalPacienteSearch.length < 2) {
+                  <p class="mt-1.5 text-xs text-gray-500">Escribe al menos 2 caracteres para buscar</p>
+                }
               } @else {
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p class="font-medium">{{ selectedPaciente()!.nombre_completo }}</p>
-                    <p class="text-sm text-gray-500">{{ selectedPaciente()!.edad_texto }}</p>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+                      {{ getInitials(selectedPaciente()!.nombre_completo) }}
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-900">{{ selectedPaciente()!.nombre_completo }}</p>
+                      <p class="text-sm text-gray-500">{{ selectedPaciente()!.edad_texto }}</p>
+                    </div>
                   </div>
-                  <button type="button" (click)="clearModalPaciente()" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button
+                    type="button"
+                    (click)="clearModalPaciente()"
+                    class="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                   </button>
@@ -277,28 +302,58 @@ import { debounceTime, Subject } from 'rxjs';
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
-                <input type="date" formControlName="fecha" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" [max]="today">
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Fecha *</label>
+                <input type="date" formControlName="fecha" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20" [max]="today">
               </div>
               <div></div>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Peso (kg) *</label>
-                <input type="number" formControlName="peso_kg" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.01" min="0" (blur)="calculatePreview()">
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Peso (kg) *</label>
+                <input type="number" formControlName="peso_kg" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20" step="0.01" min="0" (blur)="calculatePreview()">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Talla (cm) *</label>
-                <input type="number" formControlName="talla_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1" min="0" (blur)="calculatePreview()">
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Talla (cm) *</label>
+                <input type="number" formControlName="talla_cm" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20" step="0.1" min="0" (blur)="calculatePreview()">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">P. Cefálico (cm)</label>
-                <input type="number" formControlName="perimetro_cefalico_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1" min="0">
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">P. Cefálico (cm)</label>
+                <input type="number" formControlName="perimetro_cefalico_cm" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20" step="0.1" min="0">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">P. Torácico (cm)</label>
-                <input type="number" formControlName="perimetro_toracico_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1" min="0">
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">P. Torácico (cm)</label>
+                <input type="number" formControlName="perimetro_toracico_cm" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20" step="0.1" min="0">
+              </div>
+            </div>
+
+            <!-- Hemoglobina y Suplemento de Hierro -->
+            <div class="border-t border-gray-100 pt-5">
+              <h4 class="font-medium text-gray-800 mb-4">Hemoglobina y Suplemento de Hierro</h4>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700">Hemoglobina (g/dL)</label>
+                  <input type="number" formControlName="dosaje_hemoglobina" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20" step="0.1" min="0" placeholder="Ej: 11.5">
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700">Estado Suplemento Hierro</label>
+                  <select formControlName="suplemento_hierro_estado" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="no_iniciado">No iniciado</option>
+                    <option value="iniciado">Iniciado</option>
+                    <option value="continuando">Continuando</option>
+                    <option value="terminado">Terminado</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700">Tipo Suplemento</label>
+                  <select formControlName="suplemento_hierro_tipo" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="gotas">Gotas</option>
+                    <option value="jarabe">Jarabe</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -329,57 +384,57 @@ import { debounceTime, Subject } from 'rxjs';
               </div>
             }
 
-            <div class="border-t border-gray-200 pt-4">
-              <h4 class="font-medium text-gray-900 mb-3">Desarrollo (opcional)</h4>
+            <div class="border-t border-gray-100 pt-5">
+              <h4 class="font-medium text-gray-800 mb-4">Desarrollo (opcional)</h4>
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Desarrollo Motor</label>
-                  <textarea formControlName="desarrollo_motor" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700">Desarrollo Motor</label>
+                  <textarea formControlName="desarrollo_motor" rows="2" class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"></textarea>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Desarrollo Lenguaje</label>
-                  <textarea formControlName="desarrollo_lenguaje" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700">Desarrollo Lenguaje</label>
+                  <textarea formControlName="desarrollo_lenguaje" rows="2" class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"></textarea>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Desarrollo Social</label>
-                  <textarea formControlName="desarrollo_social" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700">Desarrollo Social</label>
+                  <textarea formControlName="desarrollo_social" rows="2" class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"></textarea>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Desarrollo Cognitivo</label>
-                  <textarea formControlName="desarrollo_cognitivo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700">Desarrollo Cognitivo</label>
+                  <textarea formControlName="desarrollo_cognitivo" rows="2" class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"></textarea>
                 </div>
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
-              <textarea formControlName="observaciones" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700">Observaciones</label>
+              <textarea formControlName="observaciones" rows="2" class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"></textarea>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Recomendaciones</label>
-              <textarea formControlName="recomendaciones" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"></textarea>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700">Recomendaciones</label>
+              <textarea formControlName="recomendaciones" rows="2" class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"></textarea>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Próxima Cita</label>
-              <input type="date" formControlName="proxima_cita" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" [min]="today">
+              <label class="mb-1.5 block text-sm font-medium text-gray-700">Próxima Cita</label>
+              <input type="date" formControlName="proxima_cita" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20" [min]="today">
             </div>
 
             @if (controlError()) {
-              <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">{{ controlError() }}</div>
+              <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">{{ controlError() }}</div>
             }
 
-            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <button type="button" (click)="closeControlModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-8">
+              <button type="button" (click)="closeControlModal()" class="inline-flex items-center justify-center w-full sm:w-auto rounded-lg bg-white px-5 py-3.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
                 Cancelar
               </button>
               <button
                 type="submit"
                 [disabled]="controlForm.invalid || !selectedPaciente() || savingControl()"
-                class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50">
+                class="inline-flex items-center justify-center gap-2 w-full sm:w-auto rounded-lg bg-brand-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 transition">
                 @if (savingControl()) {
-                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 }
                 Guardar Control
               </button>
@@ -391,18 +446,17 @@ import { debounceTime, Subject } from 'rxjs';
 
     <!-- Control Detail Modal -->
     @if (showDetailModal()) {
-      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideIn">
-          <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900">Detalle del Control</h2>
-            <button (click)="closeDetailModal()" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
+      <div class="fixed inset-0 flex items-center justify-center overflow-y-auto z-99999">
+        <div class="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]" (click)="closeDetailModal()"></div>
+        <div class="relative w-full max-w-[700px] max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 lg:p-10 m-5 sm:m-0">
+          <button (click)="closeDetailModal()" class="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 sm:right-6 sm:top-6 sm:h-11 sm:w-11">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z" fill="currentColor"/>
+            </svg>
+          </button>
+          <h4 class="mb-6 font-semibold text-gray-800 text-xl">Detalle del Control</h4>
           @if (selectedControl()) {
-            <div class="p-6 space-y-6">
+            <div class="space-y-6">
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-500">Paciente</p>
@@ -452,6 +506,29 @@ import { debounceTime, Subject } from 'rxjs';
                     <div>
                       <p class="text-sm text-gray-500">IMC</p>
                       <p class="font-medium">{{ selectedControl()!.imc }}</p>
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (selectedControl()!.dosaje_hemoglobina || selectedControl()!.suplemento_hierro_estado) {
+                <div class="grid grid-cols-3 gap-4">
+                  @if (selectedControl()!.dosaje_hemoglobina) {
+                    <div class="p-3 bg-gray-50 rounded-lg text-center">
+                      <p class="text-sm text-gray-500">Hemoglobina</p>
+                      <p class="font-semibold" [class.text-red-600]="+(selectedControl()!.dosaje_hemoglobina!) < 11">{{ selectedControl()!.dosaje_hemoglobina }} g/dL</p>
+                    </div>
+                  }
+                  @if (selectedControl()!.suplemento_hierro_estado) {
+                    <div class="p-3 bg-gray-50 rounded-lg text-center">
+                      <p class="text-sm text-gray-500">Suplemento Hierro</p>
+                      <p class="font-semibold capitalize">{{ selectedControl()!.suplemento_hierro_estado!.replace('_', ' ') }}</p>
+                    </div>
+                  }
+                  @if (selectedControl()!.suplemento_hierro_tipo) {
+                    <div class="p-3 bg-gray-50 rounded-lg text-center">
+                      <p class="text-sm text-gray-500">Tipo Suplemento</p>
+                      <p class="font-semibold capitalize">{{ selectedControl()!.suplemento_hierro_tipo }}</p>
                     </div>
                   }
                 </div>
@@ -507,11 +584,11 @@ import { debounceTime, Subject } from 'rxjs';
                 </div>
               }
 
-              <div class="flex gap-3 pt-4 border-t border-gray-200">
-                <button (click)="editControl(selectedControl()!)" class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+              <div class="flex flex-col sm:flex-row gap-3 mt-8">
+                <button (click)="editControl(selectedControl()!)" class="flex-1 inline-flex items-center justify-center rounded-lg bg-white px-5 py-3.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
                   Editar
                 </button>
-                <button (click)="viewGrowthChart(selectedControl()!)" class="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700">
+                <button (click)="viewGrowthChart(selectedControl()!)" class="flex-1 inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition">
                   Ver Gráfico
                 </button>
               </div>
@@ -523,18 +600,17 @@ import { debounceTime, Subject } from 'rxjs';
 
     <!-- Growth Chart Modal -->
     @if (showChartModal()) {
-      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-slideIn">
-          <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900">
-              Curvas de Crecimiento - {{ chartData()?.paciente_nombre }}
-            </h2>
-            <button (click)="closeChartModal()" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
+      <div class="fixed inset-0 flex items-center justify-center overflow-y-auto z-99999">
+        <div class="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]" (click)="closeChartModal()"></div>
+        <div class="relative w-full max-w-[900px] max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 lg:p-10 m-5 sm:m-0">
+          <button (click)="closeChartModal()" class="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 sm:right-6 sm:top-6 sm:h-11 sm:w-11">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z" fill="currentColor"/>
+            </svg>
+          </button>
+          <h4 class="mb-6 font-semibold text-gray-800 text-xl">
+            Curvas de Crecimiento - {{ chartData()?.paciente_nombre }}
+          </h4>
           @if (loadingChart()) {
             <div class="flex justify-center py-12">
               <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
@@ -635,28 +711,32 @@ import { debounceTime, Subject } from 'rxjs';
 
     <!-- Calculator Modal -->
     @if (showCalculatorModal()) {
-      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md animate-slideIn">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Calculadora OMS</h2>
-          </div>
-          <form [formGroup]="calculatorForm" (ngSubmit)="calculate()" class="p-6 space-y-4">
+      <div class="fixed inset-0 flex items-center justify-center overflow-y-auto z-99999">
+        <div class="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]" (click)="closeCalculatorModal()"></div>
+        <div class="relative w-full max-w-[450px] rounded-3xl bg-white p-6 lg:p-10 m-5 sm:m-0">
+          <button (click)="closeCalculatorModal()" class="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 sm:right-6 sm:top-6 sm:h-11 sm:w-11">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z" fill="currentColor"/>
+            </svg>
+          </button>
+          <h4 class="mb-6 font-semibold text-gray-800 text-xl">Calculadora OMS</h4>
+          <form [formGroup]="calculatorForm" (ngSubmit)="calculate()" class="space-y-5">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Peso (kg) *</label>
-                <input type="number" formControlName="peso_kg" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.01">
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Peso (kg) *</label>
+                <input type="number" formControlName="peso_kg" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20" step="0.01">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Talla (cm) *</label>
-                <input type="number" formControlName="talla_cm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" step="0.1">
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Talla (cm) *</label>
+                <input type="number" formControlName="talla_cm" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20" step="0.1">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Edad (meses) *</label>
-                <input type="number" formControlName="edad_meses" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Edad (meses) *</label>
+                <input type="number" formControlName="edad_meses" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Sexo *</label>
-                <select formControlName="sexo" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Sexo *</label>
+                <select formControlName="sexo" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden">
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
                 </select>
@@ -666,9 +746,9 @@ import { debounceTime, Subject } from 'rxjs';
             <button
               type="submit"
               [disabled]="calculatorForm.invalid || calculating()"
-              class="btn btn-primary w-full">
+              class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 transition">
               @if (calculating()) {
-                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               }
               Calcular
             </button>
@@ -708,8 +788,8 @@ import { debounceTime, Subject } from 'rxjs';
               </div>
             }
 
-            <div class="flex justify-end pt-4 border-t border-gray-200">
-              <button type="button" (click)="closeCalculatorModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+            <div class="flex justify-end mt-8">
+              <button type="button" (click)="closeCalculatorModal()" class="inline-flex items-center justify-center rounded-lg bg-white px-5 py-3.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
                 Cerrar
               </button>
             </div>
@@ -751,6 +831,8 @@ export class CREDComponent implements OnInit {
   selectedPaciente = signal<Paciente | null>(null);
   modalPacienteSearch = '';
   modalPacienteResults = signal<Paciente[]>([]);
+  searchingModalPacientes = signal(false);
+  showModalPacienteDropdown = signal(false);
   previewResult = signal<CalculadoraOMSResponse | null>(null);
 
   // Detail Modal
@@ -773,6 +855,9 @@ export class CREDComponent implements OnInit {
     talla_cm: [null as number | null, [Validators.required, Validators.min(0)]],
     perimetro_cefalico_cm: [null as number | null],
     perimetro_toracico_cm: [null as number | null],
+    dosaje_hemoglobina: [null as number | null],
+    suplemento_hierro_estado: [''],
+    suplemento_hierro_tipo: [''],
     desarrollo_motor: [''],
     desarrollo_lenguaje: [''],
     desarrollo_social: [''],
@@ -920,10 +1005,18 @@ export class CREDComponent implements OnInit {
   searchModalPacientes(term: string): void {
     if (!term || term.length < 2) {
       this.modalPacienteResults.set([]);
+      this.searchingModalPacientes.set(false);
+      this.showModalPacienteDropdown.set(false);
       return;
     }
+    this.searchingModalPacientes.set(true);
+    this.showModalPacienteDropdown.set(true);
     this.pacientesService.getAll({ search: term, page_size: 5 }).subscribe({
-      next: (response) => this.modalPacienteResults.set(response.results)
+      next: (response) => {
+        this.modalPacienteResults.set(response.results);
+        this.searchingModalPacientes.set(false);
+      },
+      error: () => this.searchingModalPacientes.set(false)
     });
   }
 
@@ -931,12 +1024,14 @@ export class CREDComponent implements OnInit {
     this.selectedPaciente.set(paciente);
     this.modalPacienteResults.set([]);
     this.modalPacienteSearch = '';
+    this.showModalPacienteDropdown.set(false);
     this.calculatePreview();
   }
 
   clearModalPaciente(): void {
     this.selectedPaciente.set(null);
     this.previewResult.set(null);
+    this.showModalPacienteDropdown.set(false);
   }
 
   openControlModal(): void {
@@ -951,6 +1046,9 @@ export class CREDComponent implements OnInit {
     this.showControlModal.set(false);
     this.selectedPaciente.set(null);
     this.modalPacienteSearch = '';
+    this.modalPacienteResults.set([]);
+    this.showModalPacienteDropdown.set(false);
+    this.searchingModalPacientes.set(false);
   }
 
   calculatePreview(): void {
@@ -984,6 +1082,9 @@ export class CREDComponent implements OnInit {
       talla_cm: this.controlForm.value.talla_cm!,
       perimetro_cefalico_cm: this.controlForm.value.perimetro_cefalico_cm || undefined,
       perimetro_toracico_cm: this.controlForm.value.perimetro_toracico_cm || undefined,
+      dosaje_hemoglobina: this.controlForm.value.dosaje_hemoglobina || undefined,
+      suplemento_hierro_estado: (this.controlForm.value.suplemento_hierro_estado as SuplementoHierroEstado) || undefined,
+      suplemento_hierro_tipo: (this.controlForm.value.suplemento_hierro_tipo as any) || undefined,
       desarrollo_motor: this.controlForm.value.desarrollo_motor || undefined,
       desarrollo_lenguaje: this.controlForm.value.desarrollo_lenguaje || undefined,
       desarrollo_social: this.controlForm.value.desarrollo_social || undefined,
@@ -1030,6 +1131,9 @@ export class CREDComponent implements OnInit {
       talla_cm: parseFloat(control.talla_cm),
       perimetro_cefalico_cm: control.perimetro_cefalico_cm ? parseFloat(control.perimetro_cefalico_cm) : null,
       perimetro_toracico_cm: control.perimetro_toracico_cm ? parseFloat(control.perimetro_toracico_cm) : null,
+      dosaje_hemoglobina: control.dosaje_hemoglobina ? parseFloat(control.dosaje_hemoglobina) : null,
+      suplemento_hierro_estado: control.suplemento_hierro_estado || '',
+      suplemento_hierro_tipo: control.suplemento_hierro_tipo || '',
       desarrollo_motor: control.desarrollo_motor || '',
       desarrollo_lenguaje: control.desarrollo_lenguaje || '',
       desarrollo_social: control.desarrollo_social || '',

@@ -1,6 +1,23 @@
 export type TipoParto = 'vaginal' | 'cesarea';
 export type GrupoSanguineo = 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-' | 'ND';
 
+export interface DiagnosticoNANDA {
+  id: number;
+  codigo: string;
+  dominio: string;
+  clase: string;
+  etiqueta: string;
+  definicion?: string;
+}
+
+export interface DiagnosticoCIE10 {
+  id: number;
+  codigo: string;
+  descripcion: string;
+  capitulo: string;
+  grupo: string;
+}
+
 export interface HistoriaClinica {
   id: number;
   paciente: {
@@ -47,28 +64,32 @@ export interface HistoriaClinicaCreate {
 
 export interface NotaSOAPIE {
   id: number;
-  historia_clinica: number;
+  fecha: string;
+  enfermera_nombre?: string;
   cita?: number;
   cita_info?: {
     id: number;
     fecha: string;
-    servicio_nombre: string;
+    servicio: string;
   };
-  fecha: string;
   subjetivo: string;
   objetivo: string;
   analisis: string;
   planificacion: string;
   intervencion: string;
   evaluacion: string;
-  temperatura?: number;
+  temperatura?: string;
   frecuencia_cardiaca?: number;
   frecuencia_respiratoria?: number;
+  presion_sistolica?: number;
+  presion_diastolica?: number;
+  presion_arterial?: string;
   saturacion_oxigeno?: number;
-  presion_arterial_sistolica?: number;
-  presion_arterial_diastolica?: number;
-  created_at: string;
-  enfermera_nombre?: string;
+  glucosa_capilar?: string;
+  diagnosticos_nanda?: DiagnosticoNANDA[];
+  diagnosticos_cie10?: DiagnosticoCIE10[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface NotaSOAPIECreate {
@@ -83,7 +104,10 @@ export interface NotaSOAPIECreate {
   temperatura?: number;
   frecuencia_cardiaca?: number;
   frecuencia_respiratoria?: number;
+  presion_sistolica?: number;
+  presion_diastolica?: number;
   saturacion_oxigeno?: number;
-  presion_arterial_sistolica?: number;
-  presion_arterial_diastolica?: number;
+  glucosa_capilar?: number;
+  diagnosticos_nanda_ids?: number[];
+  diagnosticos_cie10_ids?: number[];
 }

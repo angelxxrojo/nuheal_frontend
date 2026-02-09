@@ -2,27 +2,27 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { FacturacionService } from '../../services/facturacion.service';
-import { Ingreso, Gasto, ResumenMensual, ResumenAnual } from '../../../../models/facturacion.model';
+import { PacientesService } from '../../services/pacientes.service';
+import { AgendaService } from '../../services/agenda.service';
+import { Ingreso, Gasto, ResumenMensual, ResumenAnual, IngresoCreate } from '../../../../models/facturacion.model';
+import { Paciente } from '../../../../models/paciente.model';
+import { Cita } from '../../../../models/cita.model';
 import { MetodoPago, CategoriaGasto } from '../../../../models/common.model';
+import { PageBreadcrumbComponent } from '../../../../shared/components/page-breadcrumb/page-breadcrumb.component';
+import { debounceTime, Subject } from 'rxjs';
 
 type TabType = 'resumen' | 'ingresos' | 'gastos';
 
 @Component({
   selector: 'app-facturacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PageBreadcrumbComponent],
   template: `
     <div class="space-y-6">
-      <!-- Header -->
-      <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-2xl font-semibold text-gray-900">Facturación</h1>
-          <p class="mt-1 text-sm text-gray-500">Control de ingresos y gastos del consultorio</p>
-        </div>
-      </div>
+      <app-page-breadcrumb pageTitle="Facturación" />
 
       <!-- Filtros de período -->
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="rounded-2xl border border-gray-200 bg-white p-4">
         <div class="flex flex-wrap items-center gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Mes</label>
@@ -54,7 +54,7 @@ type TabType = 'resumen' | 'ingresos' | 'gastos';
       <!-- Resumen Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- Ingresos -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="rounded-2xl border border-gray-200 bg-white p-6">
           <div class="flex items-center">
             <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
               <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -76,7 +76,7 @@ type TabType = 'resumen' | 'ingresos' | 'gastos';
         </div>
 
         <!-- Gastos -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="rounded-2xl border border-gray-200 bg-white p-6">
           <div class="flex items-center">
             <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
               <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -98,7 +98,7 @@ type TabType = 'resumen' | 'ingresos' | 'gastos';
         </div>
 
         <!-- Balance -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="rounded-2xl border border-gray-200 bg-white p-6">
           <div class="flex items-center">
             <div class="flex-shrink-0 rounded-md p-3"
                  [ngClass]="(resumenMensual()?.balance || 0) >= 0 ? 'bg-blue-100' : 'bg-yellow-100'">
@@ -125,7 +125,7 @@ type TabType = 'resumen' | 'ingresos' | 'gastos';
       </div>
 
       <!-- Tabs -->
-      <div class="bg-white rounded-lg shadow">
+      <div class="rounded-2xl border border-gray-200 bg-white">
         <div class="border-b border-gray-200">
           <nav class="-mb-px flex" aria-label="Tabs">
             <button
@@ -384,7 +384,7 @@ type TabType = 'resumen' | 'ingresos' | 'gastos';
       @if (tabActivo() !== 'resumen' && resumenMensual()) {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Ingresos por método -->
-          <div class="bg-white rounded-lg shadow p-6">
+          <div class="rounded-2xl border border-gray-200 bg-white p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Ingresos por método de pago</h3>
             @if (resumenMensual()?.ingresos_por_metodo) {
               <div class="space-y-3">
@@ -401,7 +401,7 @@ type TabType = 'resumen' | 'ingresos' | 'gastos';
           </div>
 
           <!-- Gastos por categoría -->
-          <div class="bg-white rounded-lg shadow p-6">
+          <div class="rounded-2xl border border-gray-200 bg-white p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Gastos por categoría</h3>
             @if (resumenMensual()?.gastos_por_categoria) {
               <div class="space-y-3">
@@ -422,197 +422,285 @@ type TabType = 'resumen' | 'ingresos' | 'gastos';
 
     <!-- Modal Ingreso -->
     @if (modalIngresoVisible()) {
-      <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModalIngreso()"></div>
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-          <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+      <div class="fixed inset-0 flex items-center justify-center overflow-y-auto z-99999" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]" (click)="cerrarModalIngreso()"></div>
+        <div class="relative w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 lg:p-10 m-5 sm:m-0">
+          <h3 class="text-lg font-semibold text-gray-900 mb-6">
+            {{ ingresoSeleccionado() ? 'Editar Ingreso' : 'Nuevo Ingreso' }}
+          </h3>
+          <form [formGroup]="ingresoForm" (ngSubmit)="guardarIngreso()" class="space-y-4">
+            <!-- Paciente (opcional) -->
             <div>
-              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                {{ ingresoSeleccionado() ? 'Editar Ingreso' : 'Nuevo Ingreso' }}
-              </h3>
-              <form [formGroup]="ingresoForm" (ngSubmit)="guardarIngreso()" class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">Fecha *</label>
-                  <input type="date" formControlName="fecha"
-                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Paciente (opcional)</label>
+              @if (!selectedPaciente()) {
+                <div class="relative">
+                  <input
+                    type="text"
+                    [(ngModel)]="pacienteSearch"
+                    [ngModelOptions]="{standalone: true}"
+                    (ngModelChange)="onPacienteSearch($event)"
+                    (focus)="showPacienteDropdown.set(true)"
+                    placeholder="Buscar paciente..."
+                    class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"
+                  >
+                  @if (searchingPacientes()) {
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div class="h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></div>
+                    </div>
+                  }
+                  @if (pacienteResults().length > 0 && showPacienteDropdown()) {
+                    <div class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      @for (p of pacienteResults(); track p.id) {
+                        <button
+                          type="button"
+                          (click)="selectPaciente(p)"
+                          class="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm"
+                        >
+                          <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-medium text-brand-700">
+                            {{ getInitials(p.nombre_completo) }}
+                          </div>
+                          <span>{{ p.nombre_completo }}</span>
+                        </button>
+                      }
+                    </div>
+                  }
                 </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">Concepto *</label>
-                  <input type="text" formControlName="concepto" placeholder="Ej: Consulta de control"
-                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">Descripción</label>
-                  <textarea formControlName="descripcion" rows="2"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700">Monto (S/) *</label>
-                    <input type="number" formControlName="monto" step="0.01" min="0"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              } @else {
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
+                  <div class="flex items-center gap-2">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-medium text-brand-700">
+                      {{ getInitials(selectedPaciente()!.nombre_completo) }}
+                    </div>
+                    <span class="text-sm font-medium">{{ selectedPaciente()!.nombre_completo }}</span>
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700">Método de pago *</label>
-                    <select formControlName="metodo_pago"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                      @for (metodo of metodosPago; track metodo.value) {
-                        <option [value]="metodo.value">{{ metodo.label }}</option>
+                  <button type="button" (click)="clearPaciente()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Cita (opcional, aparece si hay paciente seleccionado) -->
+            @if (selectedPaciente()) {
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Cita (opcional)</label>
+                @if (loadingCitas()) {
+                  <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></div>
+                    <span class="text-sm text-gray-500">Cargando citas...</span>
+                  </div>
+                } @else if (!selectedCita()) {
+                  @if (citasPaciente().length === 0) {
+                    <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-500">
+                      No hay citas registradas para este paciente
+                    </div>
+                  } @else {
+                    <select
+                      (change)="onCitaChange($event)"
+                      class="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"
+                    >
+                      <option value="">Seleccionar cita...</option>
+                      @for (cita of citasPaciente(); track cita.id) {
+                        <option [value]="cita.id">
+                          {{ formatDate(cita.fecha) }} - {{ cita.servicio_nombre }} ({{ cita.estado_display || cita.estado }})
+                        </option>
                       }
                     </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">Número de recibo</label>
-                  <input type="text" formControlName="numero_recibo"
-                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                </div>
-
-                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                  <button type="submit" [disabled]="ingresoForm.invalid || guardandoIngreso()"
-                          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:col-start-2 sm:text-sm disabled:opacity-50">
-                    @if (guardandoIngreso()) {
-                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  }
+                } @else {
+                  <div class="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
+                    <div class="flex items-center gap-2">
+                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm"
+                           [style.background-color]="selectedCita()!.servicio_color || '#e0e7ff'"
+                           [style.color]="'#fff'">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <span class="text-sm font-medium">{{ selectedCita()!.servicio_nombre }}</span>
+                        <p class="text-xs text-gray-500">{{ formatDate(selectedCita()!.fecha) }} - {{ selectedCita()!.hora_inicio }}</p>
+                      </div>
+                    </div>
+                    <button type="button" (click)="clearCita()" class="text-gray-400 hover:text-gray-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                       </svg>
-                      Guardando...
-                    } @else {
-                      Guardar
-                    }
-                  </button>
-                  <button type="button" (click)="cerrarModalIngreso()"
-                          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
-                    Cancelar
-                  </button>
-                </div>
-              </form>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Fecha *</label>
+              <input type="date" formControlName="fecha"
+                     class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
             </div>
-          </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Concepto *</label>
+              <input type="text" formControlName="concepto" placeholder="Ej: Consulta de control"
+                     class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Descripción</label>
+              <textarea formControlName="descripcion" rows="2"
+                        class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Monto (S/) *</label>
+                <input type="number" formControlName="monto" step="0.01" min="0"
+                       class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Método de pago *</label>
+                <select formControlName="metodo_pago"
+                        class="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
+                  @for (metodo of metodosPago; track metodo.value) {
+                    <option [value]="metodo.value">{{ metodo.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Número de recibo</label>
+              <input type="text" formControlName="numero_recibo"
+                     class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
+            </div>
+
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
+              <button type="button" (click)="cerrarModalIngreso()"
+                      class="inline-flex items-center justify-center w-full sm:w-auto rounded-lg bg-white px-5 py-3.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="ingresoForm.invalid || guardandoIngreso()"
+                      class="inline-flex items-center justify-center gap-2 w-full sm:w-auto rounded-lg bg-brand-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 transition">
+                @if (guardandoIngreso()) {
+                  <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Guardando...
+                } @else {
+                  Guardar
+                }
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     }
 
     <!-- Modal Gasto -->
     @if (modalGastoVisible()) {
-      <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="cerrarModalGasto()"></div>
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-          <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+      <div class="fixed inset-0 flex items-center justify-center overflow-y-auto z-99999" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]" (click)="cerrarModalGasto()"></div>
+        <div class="relative w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 lg:p-10 m-5 sm:m-0">
+          <h3 class="text-lg font-semibold text-gray-900 mb-6">
+            {{ gastoSeleccionado() ? 'Editar Gasto' : 'Nuevo Gasto' }}
+          </h3>
+          <form [formGroup]="gastoForm" (ngSubmit)="guardarGasto()" class="space-y-4">
             <div>
-              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                {{ gastoSeleccionado() ? 'Editar Gasto' : 'Nuevo Gasto' }}
-              </h3>
-              <form [formGroup]="gastoForm" (ngSubmit)="guardarGasto()" class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">Fecha *</label>
-                  <input type="date" formControlName="fecha"
-                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">Categoría *</label>
-                  <select formControlName="categoria"
-                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    @for (cat of categoriasGasto; track cat.value) {
-                      <option [value]="cat.value">{{ cat.label }}</option>
-                    }
-                  </select>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">Concepto *</label>
-                  <input type="text" formControlName="concepto" placeholder="Ej: Compra de insumos"
-                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700">Monto (S/) *</label>
-                    <input type="number" formControlName="monto" step="0.01" min="0"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700">Proveedor</label>
-                    <input type="text" formControlName="proveedor"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">N° Documento</label>
-                  <input type="text" formControlName="numero_documento" placeholder="Factura, boleta, etc."
-                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                </div>
-
-                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                  <button type="submit" [disabled]="gastoForm.invalid || guardandoGasto()"
-                          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:col-start-2 sm:text-sm disabled:opacity-50">
-                    @if (guardandoGasto()) {
-                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Guardando...
-                    } @else {
-                      Guardar
-                    }
-                  </button>
-                  <button type="button" (click)="cerrarModalGasto()"
-                          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
-                    Cancelar
-                  </button>
-                </div>
-              </form>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Fecha *</label>
+              <input type="date" formControlName="fecha"
+                     class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
             </div>
-          </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Categoría *</label>
+              <select formControlName="categoria"
+                      class="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
+                @for (cat of categoriasGasto; track cat.value) {
+                  <option [value]="cat.value">{{ cat.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Concepto *</label>
+              <input type="text" formControlName="concepto" placeholder="Ej: Compra de insumos"
+                     class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Monto (S/) *</label>
+                <input type="number" formControlName="monto" step="0.01" min="0"
+                       class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Proveedor</label>
+                <input type="text" formControlName="proveedor"
+                       class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">N° Documento</label>
+              <input type="text" formControlName="numero_documento" placeholder="Factura, boleta, etc."
+                     class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-300 focus:outline-none focus:ring-3 focus:ring-primary-500/20">
+            </div>
+
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
+              <button type="button" (click)="cerrarModalGasto()"
+                      class="inline-flex items-center justify-center w-full sm:w-auto rounded-lg bg-white px-5 py-3.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="gastoForm.invalid || guardandoGasto()"
+                      class="inline-flex items-center justify-center gap-2 w-full sm:w-auto rounded-lg bg-brand-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 transition">
+                @if (guardandoGasto()) {
+                  <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Guardando...
+                } @else {
+                  Guardar
+                }
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     }
 
     <!-- Modal Confirmar Eliminación -->
     @if (modalConfirmarVisible()) {
-      <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-          <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-            <div class="sm:flex sm:items-start">
-              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Confirmar eliminación</h3>
-                <div class="mt-2">
-                  <p class="text-sm text-gray-500">
-                    ¿Está seguro de eliminar este registro? Esta acción no se puede deshacer.
-                  </p>
-                </div>
-              </div>
+      <div class="fixed inset-0 flex items-center justify-center overflow-y-auto z-99999" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]" (click)="cerrarModalConfirmar()"></div>
+        <div class="relative w-full max-w-[400px] rounded-3xl bg-white p-6 lg:p-10 m-5 sm:m-0">
+          <div class="flex flex-col items-center text-center">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
+              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
             </div>
-            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-              <button type="button" (click)="ejecutarEliminacion()"
-                      [disabled]="eliminando()"
-                      class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
-                @if (eliminando()) {
-                  Eliminando...
-                } @else {
-                  Eliminar
-                }
-              </button>
-              <button type="button" (click)="cerrarModalConfirmar()"
-                      class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
-                Cancelar
-              </button>
-            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Confirmar eliminación</h3>
+            <p class="text-sm text-gray-500 mb-6">
+              ¿Está seguro de eliminar este registro? Esta acción no se puede deshacer.
+            </p>
+          </div>
+          <div class="flex flex-col-reverse sm:flex-row sm:justify-center gap-3">
+            <button type="button" (click)="cerrarModalConfirmar()"
+                    class="inline-flex items-center justify-center w-full sm:w-auto rounded-lg bg-white px-5 py-3.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
+              Cancelar
+            </button>
+            <button type="button" (click)="ejecutarEliminacion()"
+                    [disabled]="eliminando()"
+                    class="inline-flex items-center justify-center gap-2 w-full sm:w-auto rounded-lg bg-red-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs hover:bg-red-600 disabled:bg-red-300 transition">
+              @if (eliminando()) {
+                Eliminando...
+              } @else {
+                Eliminar
+              }
+            </button>
           </div>
         </div>
       </div>
@@ -621,12 +709,27 @@ type TabType = 'resumen' | 'ingresos' | 'gastos';
 })
 export class FacturacionComponent implements OnInit {
   private facturacionService = inject(FacturacionService);
+  private pacientesService = inject(PacientesService);
+  private agendaService = inject(AgendaService);
   private fb = inject(FormBuilder);
+  private pacienteSearchSubject = new Subject<string>();
 
   // Estado
   tabActivo = signal<TabType>('resumen');
   mesSeleccionado = signal<number>(new Date().getMonth() + 1);
   anioSeleccionado = signal<number>(new Date().getFullYear());
+
+  // Paciente para ingreso
+  pacienteSearch = '';
+  pacienteResults = signal<Paciente[]>([]);
+  selectedPaciente = signal<Paciente | null>(null);
+  searchingPacientes = signal(false);
+  showPacienteDropdown = signal(false);
+
+  // Citas del paciente
+  citasPaciente = signal<Cita[]>([]);
+  selectedCita = signal<Cita | null>(null);
+  loadingCitas = signal(false);
 
   // Data
   ingresos = signal<Ingreso[]>([]);
@@ -713,6 +816,10 @@ export class FacturacionComponent implements OnInit {
     const currentYear = new Date().getFullYear();
     this.anios = Array.from({ length: 5 }, (_, i) => currentYear - i);
     this.cargarDatos();
+
+    this.pacienteSearchSubject.pipe(debounceTime(300)).subscribe(term => {
+      this.buscarPacientes(term);
+    });
   }
 
   cargarDatos() {
@@ -841,9 +948,103 @@ export class FacturacionComponent implements OnInit {
       .map(([key, value]) => ({ key, ...value }));
   }
 
+  // Búsqueda de paciente
+  onPacienteSearch(term: string) {
+    this.pacienteSearchSubject.next(term);
+  }
+
+  buscarPacientes(term: string) {
+    if (!term || term.length < 2) {
+      this.pacienteResults.set([]);
+      this.showPacienteDropdown.set(false);
+      return;
+    }
+    this.searchingPacientes.set(true);
+    this.showPacienteDropdown.set(true);
+    this.pacientesService.getAll({ search: term, page_size: 5 }).subscribe({
+      next: (response: any) => {
+        const results = Array.isArray(response) ? response : (response?.results || []);
+        this.pacienteResults.set(results);
+        this.searchingPacientes.set(false);
+      },
+      error: () => {
+        this.pacienteResults.set([]);
+        this.searchingPacientes.set(false);
+      }
+    });
+  }
+
+  selectPaciente(paciente: Paciente) {
+    this.selectedPaciente.set(paciente);
+    this.pacienteResults.set([]);
+    this.pacienteSearch = '';
+    this.showPacienteDropdown.set(false);
+    this.cargarCitasPaciente(paciente.id);
+  }
+
+  clearPaciente() {
+    this.selectedPaciente.set(null);
+    this.pacienteSearch = '';
+    this.citasPaciente.set([]);
+    this.selectedCita.set(null);
+  }
+
+  cargarCitasPaciente(pacienteId: number) {
+    this.loadingCitas.set(true);
+    this.citasPaciente.set([]);
+    this.selectedCita.set(null);
+    this.agendaService.getCitas({ paciente: pacienteId, page_size: 50 }).subscribe({
+      next: (response) => {
+        this.citasPaciente.set(response.results);
+        this.loadingCitas.set(false);
+      },
+      error: () => {
+        this.citasPaciente.set([]);
+        this.loadingCitas.set(false);
+      }
+    });
+  }
+
+  onCitaChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    const citaId = parseInt(select.value, 10);
+    if (citaId) {
+      const cita = this.citasPaciente().find(c => c.id === citaId);
+      if (cita) {
+        this.selectCita(cita);
+      }
+    }
+  }
+
+  selectCita(cita: Cita) {
+    this.selectedCita.set(cita);
+    // Auto-llenar datos del formulario con la información de la cita
+    const tipoServicio = cita.tipo_servicio as any;
+    const precio = tipoServicio?.precio || '';
+    this.ingresoForm.patchValue({
+      fecha: cita.fecha,
+      concepto: cita.servicio_nombre || '',
+      monto: precio
+    });
+  }
+
+  clearCita() {
+    this.selectedCita.set(null);
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '??';
+    const parts = name.split(' ');
+    return parts.slice(0, 2).map(p => p.charAt(0)).join('').toUpperCase();
+  }
+
   // Modal Ingreso
   abrirModalIngreso() {
     this.ingresoSeleccionado.set(null);
+    this.selectedPaciente.set(null);
+    this.selectedCita.set(null);
+    this.citasPaciente.set([]);
+    this.pacienteSearch = '';
     this.ingresoForm.reset({
       fecha: new Date().toISOString().split('T')[0],
       metodo_pago: 'efectivo'
@@ -853,6 +1054,8 @@ export class FacturacionComponent implements OnInit {
 
   editarIngreso(ingreso: Ingreso) {
     this.ingresoSeleccionado.set(ingreso);
+    this.selectedCita.set(null);
+    this.citasPaciente.set([]);
     this.ingresoForm.patchValue({
       fecha: ingreso.fecha,
       concepto: ingreso.concepto,
@@ -861,12 +1064,37 @@ export class FacturacionComponent implements OnInit {
       metodo_pago: ingreso.metodo_pago,
       numero_recibo: ingreso.numero_recibo || ''
     });
+    // Cargar paciente y citas si existe
+    if (ingreso.paciente) {
+      this.pacientesService.getById(ingreso.paciente).subscribe({
+        next: (paciente) => {
+          this.selectedPaciente.set(paciente);
+          this.cargarCitasPaciente(paciente.id);
+          // Si el ingreso tiene una cita asociada, seleccionarla después de cargar
+          if (ingreso.cita) {
+            this.agendaService.getCita(ingreso.cita).subscribe({
+              next: (cita) => this.selectedCita.set(cita),
+              error: () => this.selectedCita.set(null)
+            });
+          }
+        },
+        error: () => this.selectedPaciente.set(null)
+      });
+    } else {
+      this.selectedPaciente.set(null);
+    }
     this.modalIngresoVisible.set(true);
   }
 
   cerrarModalIngreso() {
     this.modalIngresoVisible.set(false);
     this.ingresoSeleccionado.set(null);
+    this.selectedPaciente.set(null);
+    this.selectedCita.set(null);
+    this.citasPaciente.set([]);
+    this.pacienteSearch = '';
+    this.pacienteResults.set([]);
+    this.showPacienteDropdown.set(false);
   }
 
   guardarIngreso() {
@@ -874,13 +1102,15 @@ export class FacturacionComponent implements OnInit {
 
     this.guardandoIngreso.set(true);
     const formValue = this.ingresoForm.value;
-    const data = {
+    const data: IngresoCreate = {
       fecha: formValue.fecha!,
       concepto: formValue.concepto!,
       descripcion: formValue.descripcion || undefined,
       monto: formValue.monto!.toString(),
       metodo_pago: formValue.metodo_pago as MetodoPago,
-      numero_recibo: formValue.numero_recibo || undefined
+      numero_recibo: formValue.numero_recibo || undefined,
+      paciente: this.selectedPaciente()?.id || undefined,
+      cita: this.selectedCita()?.id || undefined
     };
 
     const observable = this.ingresoSeleccionado()

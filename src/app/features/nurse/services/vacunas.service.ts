@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
@@ -8,7 +8,12 @@ import {
   CarnetVacunacion,
   DosisAplicada,
   DosisAplicadaCreate,
-  PacienteVacunasPendientes
+  PacienteVacunasPendientes,
+  LoteVacuna,
+  LoteVacunaCreate,
+  NoVacunacion,
+  NoVacunacionCreate,
+  AlertaLote
 } from '../../../models/vacuna.model';
 
 @Injectable({
@@ -18,6 +23,8 @@ export class VacunasService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/vacunas`;
 
+  // --- Catálogo ---
+
   getCatalogo(): Observable<Vacuna[]> {
     return this.http.get<Vacuna[]>(`${this.apiUrl}/catalogo/`);
   }
@@ -26,11 +33,21 @@ export class VacunasService {
     return this.http.get<EsquemaNacional[]>(`${this.apiUrl}/esquema-nacional/`);
   }
 
+  // --- Carnet ---
+
   getCarnet(pacienteId: number): Observable<CarnetVacunacion> {
     return this.http.get<CarnetVacunacion>(`${this.apiUrl}/carnet/${pacienteId}/`);
   }
 
-  registrarDosis(data: DosisAplicadaCreate): Observable<DosisAplicada> {
+  // --- Dosis Aplicadas ---
+
+  getDosisAplicadas(pacienteId?: number): Observable<DosisAplicada[]> {
+    let params = new HttpParams();
+    if (pacienteId) params = params.set('paciente', pacienteId.toString());
+    return this.http.get<DosisAplicada[]>(`${this.apiUrl}/dosis-aplicadas/`, { params });
+  }
+
+  registrarDosis(data: DosisAplicadaCreate | FormData): Observable<DosisAplicada> {
     return this.http.post<DosisAplicada>(`${this.apiUrl}/dosis-aplicadas/`, data);
   }
 
@@ -44,5 +61,37 @@ export class VacunasService {
 
   getPacientesPendientes(): Observable<PacienteVacunasPendientes[]> {
     return this.http.get<PacienteVacunasPendientes[]>(`${this.apiUrl}/pacientes-pendientes/`);
+  }
+
+  // --- Lotes (Inventario) ---
+
+  getLotes(vacunaId?: number): Observable<LoteVacuna[]> {
+    let params = new HttpParams();
+    if (vacunaId) params = params.set('vacuna', vacunaId.toString());
+    return this.http.get<LoteVacuna[]>(`${this.apiUrl}/lotes/`, { params });
+  }
+
+  createLote(data: LoteVacunaCreate): Observable<LoteVacuna> {
+    return this.http.post<LoteVacuna>(`${this.apiUrl}/lotes/`, data);
+  }
+
+  updateLote(id: number, data: Partial<LoteVacunaCreate>): Observable<LoteVacuna> {
+    return this.http.patch<LoteVacuna>(`${this.apiUrl}/lotes/${id}/`, data);
+  }
+
+  getAlertasLotes(): Observable<AlertaLote[]> {
+    return this.http.get<AlertaLote[]>(`${this.apiUrl}/lotes/alertas/`);
+  }
+
+  // --- No Vacunación ---
+
+  getNoVacunacion(pacienteId?: number): Observable<NoVacunacion[]> {
+    let params = new HttpParams();
+    if (pacienteId) params = params.set('paciente', pacienteId.toString());
+    return this.http.get<NoVacunacion[]>(`${this.apiUrl}/no-vacunacion/`, { params });
+  }
+
+  createNoVacunacion(data: NoVacunacionCreate): Observable<NoVacunacion> {
+    return this.http.post<NoVacunacion>(`${this.apiUrl}/no-vacunacion/`, data);
   }
 }

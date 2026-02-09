@@ -1,4 +1,4 @@
-import { Especialidad } from './common.model';
+import { Especialidad, Sexo } from './common.model';
 
 export interface User {
   id: number;
@@ -20,6 +20,9 @@ export interface Enfermera {
   telefono_consultorio?: string;
   ruc?: string;
   logo?: string;
+  sexo?: Sexo;
+  rne?: string;
+  imagen_firma_sello?: string;
   plan_actual?: {
     code: string;
     name: string;
@@ -77,4 +80,6 @@ export interface UpdateProfileRequest {
   direccion_consultorio?: string;
   telefono_consultorio?: string;
   ruc?: string;
+  sexo?: Sexo;
+  rne?: string;
 }

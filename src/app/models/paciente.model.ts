@@ -1,4 +1,4 @@
-import { TipoDocumento, Sexo, Parentesco } from './common.model';
+import { TipoDocumento, Sexo, GrupoSanguineo, Parentesco } from './common.model';
 
 export interface PacienteEdad {
   years: number;
@@ -23,6 +23,8 @@ export interface Responsable {
   puede_autorizar_procedimientos: boolean;
 }
 
+export type ClasificacionEtaria = 'nino' | 'adolescente' | 'adulto' | 'adulto_mayor';
+
 export interface Paciente {
   id: number;
   tipo_documento: TipoDocumento;
@@ -36,6 +38,8 @@ export interface Paciente {
   edad?: PacienteEdad;
   edad_texto: string;
   es_menor?: boolean;
+  clasificacion_etaria?: ClasificacionEtaria;
+  clasificacion_etaria_display?: string;
   sexo: Sexo;
   sexo_display?: string;
   lugar_nacimiento?: string;
@@ -43,6 +47,9 @@ export interface Paciente {
   distrito?: string;
   provincia?: string;
   departamento?: string;
+  ubigeo_cod?: string;
+  grupo_sanguineo?: GrupoSanguineo;
+  grupo_sanguineo_display?: string;
   telefono?: string;
   email?: string;
   foto?: string;
@@ -67,6 +74,8 @@ export interface PacienteCreate {
   distrito?: string;
   provincia?: string;
   departamento?: string;
+  ubigeo_cod?: string;
+  grupo_sanguineo?: GrupoSanguineo;
   telefono?: string;
   email?: string;
   observaciones?: string;

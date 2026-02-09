@@ -30,6 +30,10 @@ export default [
         loadComponent: () => import('./pages/agenda/agenda').then(m => m.AgendaComponent)
       },
       {
+        path: 'servicios',
+        loadComponent: () => import('./pages/servicios/servicios').then(m => m.ServiciosComponent)
+      },
+      {
         path: 'cred',
         loadComponent: () => import('./pages/cred/cred').then(m => m.CREDComponent)
       },
